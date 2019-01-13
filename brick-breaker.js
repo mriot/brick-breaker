@@ -220,8 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		constructor(x, y) {
 			this.x = x;
 			this.y = y;
-			this.vx = 5;
-			this.vy = 5;
+			this.vx = 0;
+			this.vy = -5;
 			this.radius = 6;
 			this.fillColor = 'cyan';
 
@@ -236,8 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					if (this.hits(segments[i])) {
 						segments[i].color = 'rgb(0, 255, 0)';
 						for (let j = 0; j < segments[i].contains.length; j++) {
-							segments[i].contains[j].fillColor = 'dodgerblue';
-							if (this.hits(segments[i].contains[j])) {
+							// segments[i].contains[j].fillColor = 'dodgerblue';
+							if (!segments[i].contains[j].hidden && this.hits(segments[i].contains[j])) {
 								// segments[i].contains[j].fillColor = 'red';
 								segments[i].contains[j].hidden = true;
 								this.vy *= -1;
@@ -245,17 +245,18 @@ document.addEventListener('DOMContentLoaded', () => {
 						}
 					} else {
 						segments[i].color = 'rgba(0, 255, 255, 0.5)';
-
-						// check for collisions if outside brick area
-						if (this.x - this.radius <= 0) this.vx *= -1;// left wall
-						if (this.x + this.radius >= viewport.w) this.vx *= -1;// right wall
-
-						let distX = (this.x + this.radius) - (game.playerBoard.x - game.playerBoard.w / 2);
-						let distY = (this.y + this.radius) - game.playerBoard.y;
-						if ((distX >= 0 && distX <= game.playerBoard.w + this.radius * 2) && (distY >= 0 && distY <= game.playerBoard.h + this.radius * 2)) {
-							this.vy *= -1;
-						}
 					}
+
+				}
+
+				// check for collisions if outside brick area
+				if (this.x - this.radius <= 0) this.vx *= -1;// left wall
+				if (this.x + this.radius >= viewport.w) this.vx *= -1;// right wall
+
+				let distX = (this.x + this.radius) - (game.playerBoard.x - game.playerBoard.w / 2);
+				let distY = (this.y + this.radius) - game.playerBoard.y;
+				if ((distX >= 0 && distX <= game.playerBoard.w + this.radius * 2) && (distY >= 0 && distY <= game.playerBoard.h + this.radius * 2)) {
+					this.vy *= -1;
 				}
 			}
 
