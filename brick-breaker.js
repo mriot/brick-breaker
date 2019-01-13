@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			this.x = x;
 			this.y = y;
 			this.vx = 0;
-			this.vy = -5;
+			this.vy = 1;
 			this.radius = 6;
 			this.fillColor = 'cyan';
 
@@ -256,7 +256,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				let distX = (this.x + this.radius) - (game.playerBoard.x - game.playerBoard.w / 2);
 				let distY = (this.y + this.radius) - game.playerBoard.y;
 				if ((distX >= 0 && distX <= game.playerBoard.w + this.radius * 2) && (distY >= 0 && distY <= game.playerBoard.h + this.radius * 2)) {
-					this.vy *= -1;
+					this.vy = Math.floor(Math.random() * 5 + 5) * -1;
+					this.vx = Math.floor(Math.random() * 5 + 5) * -1;
 				}
 			}
 
