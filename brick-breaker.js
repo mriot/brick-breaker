@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	let ctx = canvas.getContext('2d');
 	let game = {
 		running: false,
+		hideCursor: true,
 		devOrb: null,
 		statsHud: null,
 		playerBoard: null,
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	canvas.width = viewport.w;
 	canvas.height = viewport.h;
+	if (game.hideCursor) canvas.style.cursor = 'none';
 
 
 	const InitCanvas = () => {
@@ -40,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const Init = () => {
-		game.brickArea = new BrickArea(viewport.w / 100 * 5, 50, viewport.w / 100 * 90, viewport.h / 2, true);
+		game.brickArea = new BrickArea(viewport.w / 100 * 5, 50, viewport.w / 100 * 90, viewport.h / 2, false);
 		game.statsHud = new StatsHud();
 		game.playerBoard = new PlayerBoard();
 		game.orbs.push(new Orb(game.playerBoard.x, game.playerBoard.y - 10));
@@ -55,19 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		offsetX = game.brickArea.x + 2.5 + game.brickArea.w / 10 - (game.brickArea.w / 10) / 2;
 		for (let i = 0; i < 9; i++) {
-			game.bricks.push(new Brick(offsetX, game.brickArea.y + 20, 'brown'));
+			game.bricks.push(new Brick(offsetX, game.brickArea.y + 30, 'brown'));
 			offsetX += game.brickArea.w / 10;
 		}
 
 		offsetX = game.brickArea.x + 2.5 + game.brickArea.w / 10;
 		for (let i = 0; i < 8; i++) {
-			game.bricks.push(new Brick(offsetX, game.brickArea.y + 40, 'brown'));
+			game.bricks.push(new Brick(offsetX, game.brickArea.y + 60, 'brown'));
 			offsetX += game.brickArea.w / 10;
 		}
 
 		offsetX = game.brickArea.x + 2.5 + game.brickArea.w / 10 + (game.brickArea.w / 10) / 2;
 		for (let i = 0; i < 7; i++) {
-			game.bricks.push(new Brick(offsetX, game.brickArea.y + 60, 'brown'));
+			game.bricks.push(new Brick(offsetX, game.brickArea.y + 90, 'brown'));
 			offsetX += game.brickArea.w / 10;
 		}
 
@@ -86,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 
-		Ruler();
+		// Ruler();
 
 		game.statsHud.draw();
 		game.playerBoard.draw();
@@ -191,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			this.x = x;
 			this.y = y;
 			this.w = game.brickArea.w / 15 - 5;
-			this.h = this.w / 2.5;
+			this.h = 25;
 			this.fillColor = color;
 			this.hidden = false;
 
@@ -220,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		constructor(x, y) {
 			this.x = x;
 			this.y = y;
-			this.vx = 0;
+			this.vx = Math.floor(Math.random() * 5 + 3);
 			this.vy = 1;
 			this.radius = 6;
 			this.fillColor = 'cyan';
@@ -257,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				let distY = (this.y + this.radius) - game.playerBoard.y;
 				if ((distX >= 0 && distX <= game.playerBoard.w + this.radius * 2) && (distY >= 0 && distY <= game.playerBoard.h + this.radius * 2)) {
 					this.vy = Math.floor(Math.random() * 5 + 5) * -1;
-					this.vx = Math.floor(Math.random() * 5 + 5) * -1;
+					// this.vx = Math.floor(Math.random() * 5 + 5) * -1;
 				}
 			}
 
@@ -267,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
 				ctx.fill();
 
-				ctx.font = "14px Arial";
+				// ctx.font = "14px Arial";
 				// ctx.fillText('x:'+this.x.toFixed(0)+' y:'+this.y.toFixed(0), this.x + this.radius + 10, this.y);
 			}
 		}
@@ -305,8 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				ctx.fillRect(this.x - this.w / 2, this.y, this.w, this.h);
 				ctx.fill();
 
-				ctx.font = "14px Arial";
-				ctx.fillText('x:'+this.x.toFixed(0)+' y:'+this.y.toFixed(0), this.x + this.w / 2 + 10, this.y);
+				// ctx.font = "14px Arial";
+				// ctx.fillText('x:'+this.x.toFixed(0)+' y:'+this.y.toFixed(0), this.x + this.w / 2 + 10, this.y);
 			}
 		}
 	}
