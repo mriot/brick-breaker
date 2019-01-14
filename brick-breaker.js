@@ -141,6 +141,7 @@ const Update = () => {
 			game.orbs[i].x += game.orbs[i].vx;
 			game.orbs[i].y += game.orbs[i].vy;
 		} else {
+			// init position of orb
 			game.orbs[i].x = game.playerBoard.x;
 			game.orbs[i].y = game.playerBoard.y - 10;
 		}
@@ -264,6 +265,8 @@ class Orb {
 		this.vy = 1;
 		this.radius = 6;
 		this.fillColor = 'cyan';
+		this.maxTrailLength = 5;
+		this.trail = [];
 
 		this.hits = (obj) => {
 			return (this.x + this.radius) >= obj.x && this.x + this.radius <= (obj.x + obj.w + this.radius * 2) && (this.y + this.radius) >= obj.y && this.y + this.radius <= (obj.y + obj.h + this.radius * 2);
@@ -301,11 +304,29 @@ class Orb {
 			}
 		}
 
+		this.drawTrail = () => {
+			this.trail.push({x: this.x, y: this.y});
+			if (this.trail.length > this.maxTrailLength) this.trail.shift();
+
+			let radius = this.radius - 2;
+			let opacity = 0.1;
+			for (let i = 0; i < this.trail.length; i++) {
+				ctx.fillStyle = 'rgba(0, 255, 255, '+opacity+')';
+				ctx.beginPath();
+				ctx.arc(this.trail[i].x, this.trail[i].y, radius, 0, Math.PI * 2, false);
+				ctx.fill();
+				radius += 0.5;
+				opacity += 0.1;
+			}
+		}
+
 		this.draw = () => {
 			ctx.fillStyle = this.fillColor;
 			ctx.beginPath();
 			ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
 			ctx.fill();
+
+			this.drawTrail();
 
 			// ctx.font = "14px Arial";
 			// ctx.fillText('x:'+this.x.toFixed(0)+' y:'+this.y.toFixed(0), this.x + this.radius + 10, this.y);
