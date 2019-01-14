@@ -13,7 +13,8 @@ let game = {
 	brickArea: null,
 	orbs: [],
 	bricks: [],
-	gridSegments: []
+	gridSegments: [],
+	powerUps: []
 };
 
 // EXPOSE (deal game obj to console) ============================================================
@@ -134,6 +135,12 @@ const Update = () => {
 		}
 	}
 
+	// POWERUPS
+	for (let i = 0; i < game.powerUps.length; i++) {
+		game.powerUps[i].y += game.powerUps[i].vy;
+		game.powerUps[i].draw();
+	}
+
 	// ORBS
 	for (let i = 0; i < game.orbs.length; i++) {
 		if (game.running) {
@@ -153,6 +160,29 @@ const Update = () => {
 
 
 // CLASSES ============================================================
+class StatsHud {
+	constructor() {
+		this.x = 5;
+		this.y = 5;
+		this.w = viewport.w / 100 * 25;
+		this.h = 35;
+
+		this.draw = () => {
+			ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+			ctx.fillRect(this.x, this.y, this.w, this.h);
+			ctx.fill();
+
+			ctx.font = "16px Arial";
+			ctx.fillText("Time: 0s // Score: 0", 10, this.h / 1.3);
+
+			// top wall
+			ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+			ctx.fillRect(0, 0, viewport.w, game.brickArea.y);
+			ctx.fill();
+		}
+	}
+}
+
 class BrickArea {
 	constructor(x, y, w, h, renderGrid = false) {
 		this.x = x;
@@ -204,26 +234,26 @@ class GridSegment {
 	}
 }
 
-class StatsHud {
-	constructor() {
-		this.x = 5;
-		this.y = 5;
-		this.w = viewport.w / 100 * 25;
-		this.h = 35;
+class PowerUp {
+	constructor(x, y, lifetime) {
+		this.x = x;
+		this.y = y;
+		this.vy = 1;
+		this.w = 100;
+		this.h = 25;
+		this.lifeTime = lifetime;
 
 		this.draw = () => {
-			ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+			ctx.fillStyle = 'red';
 			ctx.fillRect(this.x, this.y, this.w, this.h);
 			ctx.fill();
-
-			ctx.font = "16px Arial";
-			ctx.fillText("Time: 0s // Score: 0", 10, this.h / 1.3);
-
-			// top wall
-			ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-			ctx.fillRect(0, 0, viewport.w, game.brickArea.y);
-			ctx.fill();
 		}
+	}
+}
+
+class xxlBoard extends PowerUp {
+	constructor(x, y) {
+		super(x, y, 100);
 	}
 }
 
@@ -235,6 +265,7 @@ class Brick {
 		this.h = 25;
 		this.fillColor = color;
 		this.hidden = false;
+		this.powerUp = false;
 
 		this.within = segment => {
 			if ((this.x + this.w) >= segment.x && this.x <= (segment.x + segment.w) && (this.y + this.h) >= segment.y && this.y <= (segment.y + segment.h)) {
@@ -246,6 +277,12 @@ class Brick {
 		for (let i = 0; i < game.gridSegments.length; i++) {
 			if (this.within(game.gridSegments[i])) {
 				game.gridSegments[i].contains.push(this);
+			}
+		}
+
+		this.dropPowerUp = () => {
+			if (Math.round(Math.random() * 5) === 1 || true) {
+				game.powerUps.push(new PowerUp(this.x, this.y, 100));
 			}
 		}
 
@@ -283,13 +320,13 @@ class Orb {
 						if (!segments[i].contains[j].hidden && this.hits(segments[i].contains[j])) {
 							// segments[i].contains[j].fillColor = 'red';
 							segments[i].contains[j].hidden = true;
+							segments[i].contains[j].dropPowerUp();
 							this.vy *= -1;
 						}
 					}
 				} else {
 					segments[i].color = 'rgba(0, 255, 255, 0.5)';
 				}
-
 			}
 
 			// check for collisions if outside brick area
