@@ -14,7 +14,8 @@ let game = {
 	orbs: [],
 	bricks: [],
 	gridSegments: [],
-	powerUps: []
+	powerUps: [],
+	equippedPowerUp: null
 };
 
 // EXPOSE (deal game obj to console) ============================================================
@@ -27,19 +28,37 @@ canvas.width = viewport.w;
 canvas.height = viewport.h;
 
 // EVENT LISTENER ============================================================
-// keyCodes: 65 = A // 68 = D // 87 = W // 83 = S // 32 = SPACE
+// keyCodes: 65 = A // 68 = D // 87 = W // 83 = S // 96 = E // 32 = SPACE
 document.addEventListener('mousemove', e => {
 	// game.devOrb.move(e);
+	// game.powerUps[0].x = e.pageX;
+	// game.powerUps[0].y = e.pageY;
 });
 document.addEventListener('keydown', e => {
+	// console.log(e.keyCode);
 	// spacebar to launch orb from board (and start the game)
-	if (e.keyCode === 32 && !game.running) {
+	if (!game.running && e.keyCode === 32) {
 		game.running = true;
 	}
+	// sticky board
+	// if (game.running && game.playerBoard.sticky && e.keyCode === 32) {
+	// 	for (let i = 0; i < game.orbs.length; i++) {
+	// 		if (game.orbs[i].vy === 0 && game.orbs[i].vx === 0) {
+	// 			game.orbs[i].vy = -5;
+	// 			game.orbs[i].vx = 1;
+	// 		}
+	// 	}
+	// }
+	// e
+	if (game.running && game.equippedPowerUp && e.keyCode === 69) {
+		game.equippedPowerUp.activate();
+	}
+	// d
 	if (e.keyCode === 68) {
 		game.boardControl.right = true;
 		game.boardControl.left = false;
 	}
+	// a
 	if (e.keyCode === 65) {
 		game.boardControl.left = true;
 		game.boardControl.right = false;
@@ -64,6 +83,7 @@ const Init = () => {
 	game.playerBoard = new PlayerBoard();
 	game.orbs.push(new Orb(game.playerBoard.x, game.playerBoard.y - 10));
 	// game.devOrb = new DevOrb();
+	// game.powerUps.push(new xxlBoard(0, 0));
 
 	// TEMP level generator
 	offsetX = game.brickArea.x + 2.5;
@@ -137,8 +157,11 @@ const Update = () => {
 
 	// POWERUPS
 	for (let i = 0; i < game.powerUps.length; i++) {
-		game.powerUps[i].y += game.powerUps[i].vy;
-		game.powerUps[i].draw();
+		game.powerUps[i].collected();
+		if (!game.powerUps[i].hidden) {
+			game.powerUps[i].y += game.powerUps[i].vy;
+			game.powerUps[i].draw();
+		}
 	}
 
 	// ORBS
@@ -148,7 +171,7 @@ const Update = () => {
 			game.orbs[i].x += game.orbs[i].vx;
 			game.orbs[i].y += game.orbs[i].vy;
 		} else {
-			// init position of orb
+			// stick orb to player board until game is running
 			game.orbs[i].x = game.playerBoard.x;
 			game.orbs[i].y = game.playerBoard.y - 10;
 		}
@@ -178,6 +201,20 @@ class StatsHud {
 			// top wall
 			ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
 			ctx.fillRect(0, 0, viewport.w, game.brickArea.y);
+			ctx.fill();
+		}
+	}
+}
+
+
+class PowerUpHud {
+	constructor() {
+		this.x = viewport.x + viewport.w - 100;
+		this.y = viewport.y + viewport.h - 100;
+
+		this.draw = () => {
+			ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+			ctx.fillRect(this.x, this.y, this.w, this.h);
 			ctx.fill();
 		}
 	}
@@ -235,25 +272,58 @@ class GridSegment {
 }
 
 class PowerUp {
-	constructor(x, y, lifetime) {
+	constructor(x, y, name) {
 		this.x = x;
 		this.y = y;
-		this.vy = 1;
-		this.w = 100;
+		this.vy = 5;
+		this.w = 50;
 		this.h = 25;
-		this.lifeTime = lifetime;
+		this.hidden = false;
+		this.color = 'purple';
+
+		this.collected = () => {
+			if (!this.hidden && (this.x + this.w) >= game.playerBoard.x - game.playerBoard.w / 2 && this.x <= (game.playerBoard.x + game.playerBoard.w / 2) && (this.y + this.h) >= game.playerBoard.y && this.y <= (game.playerBoard.y + game.playerBoard.h)) {
+				this.hidden = true;
+				console.log('power up ' + name + ' equipped!');
+				game.equippedPowerUp = this;
+				// TODO: remove from array
+				return true;
+			}
+		}
 
 		this.draw = () => {
-			ctx.fillStyle = 'red';
+			ctx.fillStyle = this.color;
 			ctx.fillRect(this.x, this.y, this.w, this.h);
 			ctx.fill();
 		}
 	}
 }
-
 class xxlBoard extends PowerUp {
 	constructor(x, y) {
-		super(x, y, 100);
+		super(x, y, 'XXL Board');
+		this.lifetime = 30;// seconds
+
+		this.activate = () => {
+			game.playerBoard.w *= 2;
+			game.equippedPowerUp = null;
+			setTimeout(() => {
+				game.playerBoard.w /= 2;
+			}, this.lifetime * 1000)
+		}
+	}
+}
+class stickyBoard extends PowerUp {
+	constructor(x, y) {
+		super(x, y, 'Sticky Board');
+		this.lifetime = 30;
+
+		this.activate = () => {
+			game.playerBoard.sticky = true;
+			game.equippedPowerUp = null;
+			setTimeout(() => {
+				game.playerBoard.sticky = false;
+			}, this.lifetime * 1000)
+		}
 	}
 }
 
@@ -265,7 +335,6 @@ class Brick {
 		this.h = 25;
 		this.fillColor = color;
 		this.hidden = false;
-		this.powerUp = false;
 
 		this.within = segment => {
 			if ((this.x + this.w) >= segment.x && this.x <= (segment.x + segment.w) && (this.y + this.h) >= segment.y && this.y <= (segment.y + segment.h)) {
@@ -281,8 +350,11 @@ class Brick {
 		}
 
 		this.dropPowerUp = () => {
-			if (Math.round(Math.random() * 5) === 1 || true) {
-				game.powerUps.push(new PowerUp(this.x, this.y, 100));
+			if (Math.round(Math.random() * 5) === 1 || false) {
+				let num = Math.round(Math.random() * 5);
+				num = 0;
+				if (num === 0) game.powerUps.push(new xxlBoard(this.x, this.y));
+				if (num === 1) game.powerUps.push(new stickyBoard(this.x, this.y));
 			}
 		}
 
@@ -336,8 +408,13 @@ class Orb {
 			let distX = (this.x + this.radius) - (game.playerBoard.x - game.playerBoard.w / 2);
 			let distY = (this.y + this.radius) - game.playerBoard.y;
 			if ((distX >= 0 && distX <= game.playerBoard.w + this.radius * 2) && (distY >= 0 && distY <= game.playerBoard.h + this.radius * 2)) {
-				this.vy = Math.floor(Math.random() * 5 + 5) * -1;
-				// this.vx = Math.floor(Math.random() * 5 + 5) * -1;
+				if (game.playerBoard.sticky) {
+					this.vy = 0;
+					this.vx = 0;
+				} else {
+					this.vy = Math.floor(Math.random() * 5 + 5) * -1;
+					// this.vx = Math.floor(Math.random() * 5 + 5) * -1;
+				}
 			}
 		}
 
@@ -379,11 +456,8 @@ class PlayerBoard {
 		this.vy = 5;
 		this.w = viewport.w / 100 * 10;
 		this.h = 7;
+		this.sticky = false;
 		this.fillColor = '#fff';
-
-		this.move = event => {
-			this.x = event.pageX;
-		}
 
 		this.draw = () => {
 			ctx.fillStyle = this.fillColor;
