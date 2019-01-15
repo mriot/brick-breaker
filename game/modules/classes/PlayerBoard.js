@@ -9,6 +9,14 @@ class PlayerBoard {
 		this.sticky = false;
 		this.fillColor = '#fff';
 
+		this.moveLeft = () => {
+			if(this.x - this.w / 2 > 0) this.x -= this.vx
+		}
+
+		this.moveRight = () => {
+			if(this.x + this.w / 2 < viewport.w) this.x += this.vx
+		}
+
 		this.draw = () => {
 			ctx.fillStyle = this.fillColor;
 			ctx.fillRect(this.x - this.w / 2, this.y, this.w, this.h);

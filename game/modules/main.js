@@ -67,8 +67,8 @@ const gameLoop = () => {
 	}
 
 	// player board movement
-	if (game.boardControl.left) game.playerBoard.x -= game.playerBoard.vx;
-	if (game.boardControl.right) game.playerBoard.x += game.playerBoard.vx;
+	if (game.boardControl.left) game.playerBoard.moveLeft();
+	if (game.boardControl.right) game.playerBoard.moveRight();
 
 	// GAME COMPONENTS
 	game.statsHud.draw();
