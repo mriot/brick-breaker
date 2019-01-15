@@ -1,0 +1,23 @@
+{
+  "name": "brick-breaker",
+  "version": "1.0.0",
+  "description": "A brick-breaker game to learn HTML5 Canvas API",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mriot/brick-breaker.git"
+  },
+  "author": "mriot",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mriot/brick-breaker/issues"
+  },
+  "homepage": "https://github.com/mriot/brick-breaker#readme",
+  "devDependencies": {
+    "gulp": "^4.0.0",
+    "gulp-concat": "^2.6.1"
+  }
+}
