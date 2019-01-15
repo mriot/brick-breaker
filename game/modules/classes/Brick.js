@@ -3,9 +3,12 @@ class Brick {
 		this.x = x;
 		this.y = y;
 		this.w = game.brickArea.w / 15 - 5;
-		this.h = 25;
+		this.h = this.w / 2;
 		this.fillColor = color;
 		this.hidden = false;
+		this.hitsRequired = 1;
+		this.texture = new Image(0, 0);
+		this.texture.src = 'img/brick.png';
 
 		this.within = segment => {
 			if ((this.x + this.w) >= segment.x && this.x <= (segment.x + segment.w) && (this.y + this.h) >= segment.y && this.y <= (segment.y + segment.h)) {
@@ -30,9 +33,12 @@ class Brick {
 		}
 
 		this.draw = () => {
-			ctx.fillStyle = this.fillColor;
-			ctx.fillRect(this.x, this.y, this.w, this.h);
+			ctx.save();
+			// ctx.fillStyle = this.fillColor;
+			// ctx.fillRect(this.x, this.y, this.w, this.h);
+			ctx.drawImage(this.texture, this.x, this.y, this.w, this.h);
 			ctx.fill();
+			ctx.restore();
 		}
 	}
 }

@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		bricks: [],
 		gridSegments: [],
 		powerUps: [],
-		equippedPowerUp: null
+		equippedPowerUp: null,
+		background: null,
 	};
 
 	// INIT GAME ============================================================
@@ -26,6 +27,9 @@ const init = () => {
 	// canvas dimensions
 	canvas.width = viewport.w;
 	canvas.height = viewport.h;
+
+	game.background = new Image(0, 0);
+	game.background.src = 'img/background.jpg';
 
 	// setup
 	game.brickArea = new BrickArea(viewport.w / 100 * 5, 50, viewport.w / 100 * 90, viewport.h / 2, false);
@@ -43,8 +47,11 @@ const init = () => {
 
 const gameLoop = () => {
 	// refresh canvas
-	ctx.fillStyle = '#161618';
+	ctx.drawImage(game.background, 0, 0, viewport.w, viewport.h);
+
+	ctx.fillStyle = 'rgba(22, 22, 24, 0.75)';
 	ctx.fillRect(0, 0, viewport.w, viewport.h);
+
 
 	// whether to render grid or not
 	if (game.brickArea.renderGrid) {

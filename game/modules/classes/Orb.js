@@ -67,15 +67,16 @@ class Orb {
 		}
 
 		this.draw = () => {
-			ctx.fillStyle = this.fillColor;
+			ctx.save();
 			ctx.beginPath();
+			ctx.shadowColor = "rgba(255, 255, 255, 0.5)";
 			ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
 			ctx.fill();
 
 			this.drawTrail();
-
 			// ctx.font = "14px Arial";
 			// ctx.fillText('x:'+this.x.toFixed(0)+' y:'+this.y.toFixed(0), this.x + this.radius + 10, this.y);
+			ctx.restore();
 		}
 	}
 }

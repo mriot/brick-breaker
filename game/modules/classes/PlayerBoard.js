@@ -18,9 +18,13 @@ class PlayerBoard {
 		}
 
 		this.draw = () => {
+			ctx.save();
 			ctx.fillStyle = this.fillColor;
+			ctx.shadowBlur = 20;
+			ctx.shadowColor = "cyan";
 			ctx.fillRect(this.x - this.w / 2, this.y, this.w, this.h);
 			ctx.fill();
+			ctx.restore();
 
 			// ctx.font = "14px Arial";
 			// ctx.fillText('x:'+this.x.toFixed(0)+' y:'+this.y.toFixed(0), this.x + this.w / 2 + 10, this.y);
