@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		running: false,
 		boardControl: {left: false, right: false, top: false, bottom: false},
 		devOrb: null,
-		statsHud: null,
 		playerBoard: null,
 		brickArea: null,
 		orbs: [],
@@ -15,7 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		gridSegments: [],
 		powerUps: [],
 		equippedPowerUp: null,
-		background: null,
+		huds: {
+			statsHud: null,
+			powerUpHud: null
+		},
+		misc: {
+			pipes: [],
+			background: null
+		}
 	};
 
 	// INIT GAME ============================================================
@@ -28,12 +34,15 @@ const init = () => {
 	canvas.width = viewport.w;
 	canvas.height = viewport.h;
 
-	game.background = new Image(0, 0);
-	game.background.src = 'img/background.jpg';
+	game.misc.background = new Image(0, 0);
+	game.misc.background.src = 'img/background.jpg';
 
 	// setup
 	game.brickArea = new BrickArea(viewport.w / 100 * 5, 50, viewport.w / 100 * 90, viewport.h / 2, false);
-	game.statsHud = new StatsHud();
+	// game.misc.pipes.push(new Pipe(0, 50, 64, viewport.h - 50));
+	// game.misc.pipes.push(new Pipe(viewport.w - 64, 50, 64, viewport.h - 50));
+	game.huds.statsHud = new StatsHud();
+	game.huds.powerUpHud = new PowerUpHud();
 	game.playerBoard = new PlayerBoard();
 	game.orbs.push(new Orb(game.playerBoard.x, game.playerBoard.y - 10));
 	// game.devOrb = new DevOrb();
@@ -47,11 +56,14 @@ const init = () => {
 
 const gameLoop = () => {
 	// refresh canvas
-	ctx.drawImage(game.background, 0, 0, viewport.w, viewport.h);
+	ctx.drawImage(game.misc.background, 0, 0, viewport.w, viewport.h);
 
 	ctx.fillStyle = 'rgba(22, 22, 24, 0.75)';
 	ctx.fillRect(0, 0, viewport.w, viewport.h);
 
+	for (let i = 0; i < game.misc.pipes.length; i++) {
+		game.misc.pipes[i].draw();
+	}
 
 	// whether to render grid or not
 	if (game.brickArea.renderGrid) {
@@ -78,7 +90,8 @@ const gameLoop = () => {
 	if (game.boardControl.right) game.playerBoard.moveRight();
 
 	// GAME COMPONENTS
-	game.statsHud.draw();
+	game.huds.statsHud.draw();
+	game.huds.powerUpHud.draw();
 	game.playerBoard.draw();
 	// game.devOrb.isColliding();
 	// game.devOrb.draw();
@@ -291,29 +304,26 @@ class Orb {
 		}
 
 		this.isColliding = () => {
-			if (this.y - this.radius <= game.brickArea.y) this.vy *= -1;// top
 			let segments = game.gridSegments;
 			for (let i = 0; i < segments.length; i++) {
 				if (this.hits(segments[i])) {
-					segments[i].color = 'rgb(0, 255, 0)';
 					for (let j = 0; j < segments[i].contains.length; j++) {
-						// segments[i].contains[j].fillColor = 'dodgerblue';
-						if (!segments[i].contains[j].hidden && this.hits(segments[i].contains[j])) {
-							// segments[i].contains[j].fillColor = 'red';
-							segments[i].contains[j].hidden = true;
-							segments[i].contains[j].dropPowerUp();
+						let brick = segments[i].contains[j];
+						if (!brick.hidden && this.hits(brick)) {
+							brick.hidden = true;
+							brick.dropPowerUp();
 							this.vy *= -1;
 						}
 					}
-				} else {
-					segments[i].color = 'rgba(0, 255, 255, 0.5)';
 				}
 			}
 
-			// check for collisions if outside brick area
-			if (this.x - this.radius <= 0) this.vx *= -1;// left wall
-			if (this.x + this.radius >= viewport.w) this.vx *= -1;// right wall
+			// wall collision
+			if (this.y - this.radius < game.brickArea.y) {this.vy *= -1; this.y = game.brickArea.y + this.radius}// top
+			if (this.x - this.radius < 0) {this.vx *= -1; this.x = this.radius}// left wall
+			if (this.x + this.radius > viewport.w) {this.vx *= -1; this.x = viewport.w - this.radius;}// right wall
 
+			// board collision
 			let distX = (this.x + this.radius) - (game.playerBoard.x - game.playerBoard.w / 2);
 			let distY = (this.y + this.radius) - game.playerBoard.y;
 			if ((distX >= 0 && distX <= game.playerBoard.w + this.radius * 2) && (distY >= 0 && distY <= game.playerBoard.h + this.radius * 2)) {
@@ -328,6 +338,7 @@ class Orb {
 		}
 
 		this.drawTrail = () => {
+			ctx.save();
 			this.trail.push({x: this.x, y: this.y});
 			if (this.trail.length > this.maxTrailLength) this.trail.shift();
 
@@ -341,18 +352,16 @@ class Orb {
 				radius += 0.5;
 				opacity += 0.1;
 			}
+			ctx.restore();
 		}
 
 		this.draw = () => {
 			ctx.save();
 			ctx.beginPath();
-			ctx.shadowColor = "rgba(255, 255, 255, 0.5)";
 			ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
 			ctx.fill();
 
 			this.drawTrail();
-			// ctx.font = "14px Arial";
-			// ctx.fillText('x:'+this.x.toFixed(0)+' y:'+this.y.toFixed(0), this.x + this.radius + 10, this.y);
 			ctx.restore();
 		}
 	}
@@ -371,6 +380,26 @@ class DevOrb extends Orb {
 	}
 }
 
+class Pipe {
+	constructor(x, y, w, h) {
+		this.x = x;
+		this.y = y;
+		this.w = w;
+		this.h = h;
+
+		this.texture = new Image(0, 0);
+		this.texture.src = 'img/pipe.png';
+
+		this.draw = () => {
+			ctx.save();
+			let pat = ctx.createPattern(this.texture, 'repeat');
+			ctx.fillStyle = pat;
+			ctx.fillRect(this.x, this.y, this.w, this.h);
+			ctx.restore();
+		}
+	}
+}
+
 class PlayerBoard {
 	constructor() {
 		this.x = viewport.w / 2;
@@ -381,6 +410,8 @@ class PlayerBoard {
 		this.h = 7;
 		this.sticky = false;
 		this.fillColor = '#fff';
+		this.texture = new Image(0, 0);
+		// this.texture.src = 'img/paddle.png';
 
 		this.moveLeft = () => {
 			if(this.x - this.w / 2 > 0) this.x -= this.vx
@@ -393,9 +424,10 @@ class PlayerBoard {
 		this.draw = () => {
 			ctx.save();
 			ctx.fillStyle = this.fillColor;
-			ctx.shadowBlur = 20;
-			ctx.shadowColor = "cyan";
+			ctx.shadowBlur = 10;
+			ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
 			ctx.fillRect(this.x - this.w / 2, this.y, this.w, this.h);
+			ctx.drawImage(this.texture, this.x - this.w / 2, this.y, this.w, this.h);
 			ctx.fill();
 			ctx.restore();
 
@@ -435,13 +467,17 @@ class PowerUp {
 
 class PowerUpHud {
 	constructor() {
-		this.x = viewport.x + viewport.w - 100;
-		this.y = viewport.y + viewport.h - 100;
+		this.x = viewport.w - 40;
+		this.y = 0;
+		this.w = 40;
+		this.h = 40;
 
 		this.draw = () => {
+			ctx.save();
 			ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
 			ctx.fillRect(this.x, this.y, this.w, this.h);
 			ctx.fill();
+			ctx.restore();
 		}
 	}
 }
@@ -478,22 +514,17 @@ class xxlBoard extends PowerUp {
 
 class StatsHud {
 	constructor() {
-		this.x = 5;
-		this.y = 5;
 		this.w = viewport.w / 100 * 25;
-		this.h = 35;
+		this.h = 30;
 
 		this.draw = () => {
-			ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-			ctx.fillRect(this.x, this.y, this.w, this.h);
-			ctx.fill();
-
+			ctx.fillStyle = '#aaa';
 			ctx.font = "16px Arial";
-			ctx.fillText("Time: 0s // Score: 0", 10, this.h / 1.3);
+			ctx.fillText("Time: 0s // Score: 0", 10, this.h - 5);
 
 			// top wall
 			ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-			ctx.fillRect(0, 0, viewport.w, game.brickArea.y);
+			ctx.fillRect(0, 0, viewport.w, this.h + 10);
 			ctx.fill();
 		}
 	}

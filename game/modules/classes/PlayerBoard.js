@@ -8,6 +8,8 @@ class PlayerBoard {
 		this.h = 7;
 		this.sticky = false;
 		this.fillColor = '#fff';
+		this.texture = new Image(0, 0);
+		// this.texture.src = 'img/paddle.png';
 
 		this.moveLeft = () => {
 			if(this.x - this.w / 2 > 0) this.x -= this.vx
@@ -20,9 +22,10 @@ class PlayerBoard {
 		this.draw = () => {
 			ctx.save();
 			ctx.fillStyle = this.fillColor;
-			ctx.shadowBlur = 20;
-			ctx.shadowColor = "cyan";
+			ctx.shadowBlur = 10;
+			ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
 			ctx.fillRect(this.x - this.w / 2, this.y, this.w, this.h);
+			ctx.drawImage(this.texture, this.x - this.w / 2, this.y, this.w, this.h);
 			ctx.fill();
 			ctx.restore();
 

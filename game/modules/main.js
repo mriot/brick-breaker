@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		running: false,
 		boardControl: {left: false, right: false, top: false, bottom: false},
 		devOrb: null,
-		statsHud: null,
 		playerBoard: null,
 		brickArea: null,
 		orbs: [],
@@ -15,7 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		gridSegments: [],
 		powerUps: [],
 		equippedPowerUp: null,
-		background: null,
+		huds: {
+			statsHud: null,
+			powerUpHud: null
+		},
+		misc: {
+			pipes: [],
+			background: null
+		}
 	};
 
 	// INIT GAME ============================================================
@@ -28,12 +34,15 @@ const init = () => {
 	canvas.width = viewport.w;
 	canvas.height = viewport.h;
 
-	game.background = new Image(0, 0);
-	game.background.src = 'img/background.jpg';
+	game.misc.background = new Image(0, 0);
+	game.misc.background.src = 'img/background.jpg';
 
 	// setup
 	game.brickArea = new BrickArea(viewport.w / 100 * 5, 50, viewport.w / 100 * 90, viewport.h / 2, false);
-	game.statsHud = new StatsHud();
+	// game.misc.pipes.push(new Pipe(0, 50, 64, viewport.h - 50));
+	// game.misc.pipes.push(new Pipe(viewport.w - 64, 50, 64, viewport.h - 50));
+	game.huds.statsHud = new StatsHud();
+	game.huds.powerUpHud = new PowerUpHud();
 	game.playerBoard = new PlayerBoard();
 	game.orbs.push(new Orb(game.playerBoard.x, game.playerBoard.y - 10));
 	// game.devOrb = new DevOrb();
@@ -47,11 +56,14 @@ const init = () => {
 
 const gameLoop = () => {
 	// refresh canvas
-	ctx.drawImage(game.background, 0, 0, viewport.w, viewport.h);
+	ctx.drawImage(game.misc.background, 0, 0, viewport.w, viewport.h);
 
 	ctx.fillStyle = 'rgba(22, 22, 24, 0.75)';
 	ctx.fillRect(0, 0, viewport.w, viewport.h);
 
+	for (let i = 0; i < game.misc.pipes.length; i++) {
+		game.misc.pipes[i].draw();
+	}
 
 	// whether to render grid or not
 	if (game.brickArea.renderGrid) {
@@ -78,7 +90,8 @@ const gameLoop = () => {
 	if (game.boardControl.right) game.playerBoard.moveRight();
 
 	// GAME COMPONENTS
-	game.statsHud.draw();
+	game.huds.statsHud.draw();
+	game.huds.powerUpHud.draw();
 	game.playerBoard.draw();
 	// game.devOrb.isColliding();
 	// game.devOrb.draw();
