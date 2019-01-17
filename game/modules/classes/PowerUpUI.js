@@ -1,4 +1,4 @@
-class PowerUpHud {
+class PowerUpUI {
 	constructor() {
 		this.x = viewport.w - 40;
 		this.y = 0;
