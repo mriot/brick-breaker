@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			powerUpUI: null
 		},
 		misc: {
+			texts: {
+				startGame: ""
+			},
 			pipes: [],
 			background: null
 		}
@@ -34,11 +37,15 @@ const init = () => {
 	canvas.width = viewport.w;
 	canvas.height = viewport.h;
 
+	// background image
 	game.misc.background = new Image(0, 0);
 	game.misc.background.src = 'img/background.jpg';
 
-	// setup
-	game.brickArea = new BrickArea(0, 45, viewport.w, viewport.h / 2, true);
+	// game-start text
+	game.misc.texts.startGame = new TextUI('Press [SPACE] to start', 'center', viewport.h / 1.15, '#fff', '40px Arial');
+
+	// game setup
+	game.brickArea = new BrickArea(0, 45, viewport.w, viewport.h / 2, false);
 	game.UIs.statsUI = new StatsUI();
 	game.UIs.powerUpUI = new PowerUpUI();
 	game.playerBoard = new PlayerBoard();
@@ -60,9 +67,10 @@ const gameLoop = () => {
 	ctx.fillStyle = 'rgba(22, 22, 24, 0.75)';
 	ctx.fillRect(0, 0, viewport.w, viewport.h);
 
-	for (let i = 0; i < game.misc.pipes.length; i++) {
-		game.misc.pipes[i].draw();
-	}
+	// visual boundaries
+	// for (let i = 0; i < game.misc.pipes.length; i++) {
+	// 	game.misc.pipes[i].draw();
+	// }
 
 	// whether to render grid or not
 	if (game.brickArea.renderGrid) {
@@ -94,6 +102,9 @@ const gameLoop = () => {
 	game.playerBoard.draw();
 	// game.devOrb.isColliding();
 	// game.devOrb.draw();
+
+	// display 'game start' text while game is not running
+	if (!game.running) game.misc.texts.startGame.pulse();
 
 	// BRICKS
 	let bricks = game.bricks.length;
@@ -132,13 +143,13 @@ const gameLoop = () => {
 
 
 // EVENT LISTENER ============================================================
-// keyCodes: 65 = A // 68 = D // 87 = W // 83 = S // 96 = E // 32 = SPACE
 document.addEventListener('mousemove', e => {
 	// game.devOrb.move(e);
 	// game.powerUps[0].x = e.pageX;
 	// game.powerUps[0].y = e.pageY;
 });
 
+// keyCodes: 65 = A // 68 = D // 87 = W // 83 = S // 96 = E // 32 = SPACE
 document.addEventListener('keydown', e => {
 	// console.log(e.keyCode);
 	// spacebar to launch orb from board (and start the game)
