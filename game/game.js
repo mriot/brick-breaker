@@ -14,9 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		gridSegments: [],
 		powerUps: [],
 		equippedPowerUp: null,
-		huds: {
-			statsHud: null,
-			powerUpHud: null
+		UIs: {
+			statsUI: null,
+			powerUpUI: null
 		},
 		misc: {
 			pipes: [],
@@ -38,17 +38,16 @@ const init = () => {
 	game.misc.background.src = 'img/background.jpg';
 
 	// setup
-	game.brickArea = new BrickArea(viewport.w / 100 * 5, 50, viewport.w / 100 * 90, viewport.h / 2, false);
-	// game.misc.pipes.push(new Pipe(0, 50, 64, viewport.h - 50));
-	// game.misc.pipes.push(new Pipe(viewport.w - 64, 50, 64, viewport.h - 50));
-	game.huds.statsHud = new StatsHud();
-	game.huds.powerUpHud = new PowerUpHud();
+	game.brickArea = new BrickArea(0, 45, viewport.w, viewport.h / 2, true);
+	game.UIs.statsUI = new StatsUI();
+	game.UIs.powerUpUI = new PowerUpUI();
 	game.playerBoard = new PlayerBoard();
 	game.orbs.push(new Orb(game.playerBoard.x, game.playerBoard.y - 10));
 	// game.devOrb = new DevOrb();
 	// game.powerUps.push(new xxlBoard(0, 0));
 
-	level_0();
+	// level_0();
+	level_1();
 
 	gameLoop();
 }
@@ -90,8 +89,8 @@ const gameLoop = () => {
 	if (game.boardControl.right) game.playerBoard.moveRight();
 
 	// GAME COMPONENTS
-	game.huds.statsHud.draw();
-	game.huds.powerUpHud.draw();
+	game.UIs.statsUI.draw();
+	game.UIs.powerUpUI.draw();
 	game.playerBoard.draw();
 	// game.devOrb.isColliding();
 	// game.devOrb.draw();
@@ -125,6 +124,7 @@ const gameLoop = () => {
 			game.orbs[i].y = game.playerBoard.y - 10;
 		}
 		game.orbs[i].draw();
+		game.orbs[i].drawTrail();
 	}
 
 	requestAnimationFrame(gameLoop);
@@ -166,7 +166,12 @@ document.addEventListener('keyup', e => {
 
 // CLASSES ============================================================
 
-const level_0 = () => {	
+const level_0 = () => {
+	let brickSize = {
+		w: game.brickArea.w / 15 - 5,
+		h: (game.brickArea.w / 15 - 5) / 1.5
+	}
+
 	let offsetX = game.brickArea.x + 2.5;
 	for (let i = 0; i < 10; i++) {
 		game.bricks.push(new Brick(offsetX, game.brickArea.y, 'brown'));
@@ -175,30 +180,51 @@ const level_0 = () => {
 
 	offsetX = game.brickArea.x + 2.5 + game.brickArea.w / 10 - (game.brickArea.w / 10) / 2;
 	for (let i = 0; i < 9; i++) {
-		game.bricks.push(new Brick(offsetX, game.brickArea.y + 30, 'brown'));
+		game.bricks.push(new Brick(offsetX, game.brickArea.y + brickSize.h + 10, 'brown'));
 		offsetX += game.brickArea.w / 10;
 	}
 
 	offsetX = game.brickArea.x + 2.5 + game.brickArea.w / 10;
 	for (let i = 0; i < 8; i++) {
-		game.bricks.push(new Brick(offsetX, game.brickArea.y + 60, 'brown'));
+		game.bricks.push(new Brick(offsetX, game.brickArea.y + brickSize.h + 30, 'brown'));
 		offsetX += game.brickArea.w / 10;
 	}
 
 	offsetX = game.brickArea.x + 2.5 + game.brickArea.w / 10 + (game.brickArea.w / 10) / 2;
 	for (let i = 0; i < 7; i++) {
-		game.bricks.push(new Brick(offsetX, game.brickArea.y + 90, 'brown'));
+		game.bricks.push(new Brick(offsetX, game.brickArea.y + brickSize.h + 10, 'brown'));
 		offsetX += game.brickArea.w / 10;
 	}
 }
 
+const level_1 = () => {
+	let blocksPerRow, offsetX = 0;
+	let center = (blocksPerRow) => {
+		return ((blocksPerRow * 60) - viewport.w) / 2 * -1;
+	}
+
+
+	const createRow = (blocksPerRow, rowNumber) => {
+		for (var i = 0; i < blocksPerRow; i++) {
+			offsetX = (i * 60) + center(blocksPerRow);
+			game.bricks.push(new Brick(offsetX, game.brickArea.y + (rowNumber * 43)));
+		}
+	}
+
+	createRow(20, 0);
+	createRow(10, 1);
+	createRow(15, 2);
+	createRow(2, 3);
+	createRow(11, 4);
+	createRow(6, 5);
+}
+
 class Brick {
-	constructor(x, y, color) {
+	constructor(x, y) {
 		this.x = x;
 		this.y = y;
-		this.w = game.brickArea.w / 15 - 5;
-		this.h = this.w / 2;
-		this.fillColor = color;
+		this.w = 60;
+		this.h = 40;
 		this.hidden = false;
 		this.hitsRequired = 1;
 		this.texture = new Image(0, 0);
@@ -221,8 +247,8 @@ class Brick {
 			if (Math.round(Math.random() * 5) === 1 || false) {
 				let num = Math.round(Math.random() * 5);
 				num = 0;
-				if (num === 0) game.powerUps.push(new xxlBoard(this.x, this.y));
-				if (num === 1) game.powerUps.push(new stickyBoard(this.x, this.y));
+				if (num === 0) game.powerUps.push(new XXLBoard(this.x, this.y));
+				if (num === 1) game.powerUps.push(new StickyBoard(this.x, this.y));
 			}
 		}
 
@@ -244,7 +270,7 @@ class BrickArea {
 		this.w = w;
 		this.h = h;
 		this.renderGrid = renderGrid;
-		this.segmentsPerRow = 4;// grid
+		this.segmentsPerRow = 5;// grid
 
 		// generate grid
 		let offsetX = this.x;
@@ -263,9 +289,11 @@ class BrickArea {
 		}
 
 		this.draw = () => {
+			ctx.save();
 			ctx.fillStyle = "rgba(0, 255, 0, 0.1)";
 			ctx.fillRect(game.brickArea.x, game.brickArea.y, game.brickArea.w, game.brickArea.h);
 			ctx.fill();
+			ctx.restore();
 		}
 	}
 }
@@ -281,9 +309,11 @@ class GridSegment {
 		this.contains = [];
 
 		this.draw = () => {
+			ctx.save();
 			ctx.strokeStyle = this.color;
 			ctx.strokeRect(this.x, this.y, this.w, this.h);
 			ctx.fillText(this.id, this.x + this.w / 2.2, this.y + this.h / 1.6);
+			ctx.restore();
 		}
 	}
 }
@@ -357,11 +387,10 @@ class Orb {
 
 		this.draw = () => {
 			ctx.save();
+			ctx.fillStyle = this.fillColor;
 			ctx.beginPath();
 			ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
 			ctx.fill();
-
-			this.drawTrail();
 			ctx.restore();
 		}
 	}
@@ -388,11 +417,11 @@ class Pipe {
 		this.h = h;
 
 		this.texture = new Image(0, 0);
-		this.texture.src = 'img/pipe.png';
+		this.texture.src = 'img/wall_vertical.png';
 
 		this.draw = () => {
 			ctx.save();
-			let pat = ctx.createPattern(this.texture, 'repeat');
+			let pat = ctx.createPattern(this.texture, 'repeat-y');
 			ctx.fillStyle = pat;
 			ctx.fillRect(this.x, this.y, this.w, this.h);
 			ctx.restore();
@@ -458,14 +487,16 @@ class PowerUp {
 		}
 
 		this.draw = () => {
+			ctx.save();
 			ctx.fillStyle = this.color;
 			ctx.fillRect(this.x, this.y, this.w, this.h);
 			ctx.fill();
+			ctx.restore();
 		}
 	}
 }
 
-class PowerUpHud {
+class PowerUpUI {
 	constructor() {
 		this.x = viewport.w - 40;
 		this.y = 0;
@@ -497,7 +528,7 @@ class StickyBoard extends PowerUp {
 	}
 }
 
-class xxlBoard extends PowerUp {
+class XXLBoard extends PowerUp {
 	constructor(x, y) {
 		super(x, y, 'XXL Board');
 		this.lifetime = 30;// seconds
@@ -512,20 +543,40 @@ class xxlBoard extends PowerUp {
 	}
 }
 
-class StatsHud {
+class StatsUI {
 	constructor() {
 		this.w = viewport.w / 100 * 25;
 		this.h = 30;
 
+		this.level = 0;
+
 		this.draw = () => {
+			ctx.save();
 			ctx.fillStyle = '#aaa';
 			ctx.font = "16px Arial";
-			ctx.fillText("Time: 0s // Score: 0", 10, this.h - 5);
+			ctx.fillText(`Level ${this.level}`, 10, this.h - 5);
 
-			// top wall
+			// container
 			ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
 			ctx.fillRect(0, 0, viewport.w, this.h + 10);
-			ctx.fill();
+			ctx.restore();
+		}
+	}
+}
+
+class LevelGenerator {
+	constructor(blocksPerRow, rowNumber) {
+		this.offsetX = 0;
+
+		this.center = () => {
+			return ((blocksPerRow * 60) - viewport.w) / 2 * -1;
+		}
+
+		this.createRow = (blocksPerRow, rowNumber) => {
+			for (var i = 0; i < blocksPerRow; i++) {
+				this.offsetX = (i * 60) + this.center(blocksPerRow);
+				game.bricks.push(new Brick(this.offsetX, game.brickArea.y + (rowNumber * 43)));
+			}
 		}
 	}
 }
