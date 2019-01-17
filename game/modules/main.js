@@ -14,9 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		gridSegments: [],
 		powerUps: [],
 		equippedPowerUp: null,
-		huds: {
-			statsHud: null,
-			powerUpHud: null
+		UIs: {
+			statsUI: null,
+			powerUpUI: null
 		},
 		misc: {
 			pipes: [],
@@ -38,17 +38,16 @@ const init = () => {
 	game.misc.background.src = 'img/background.jpg';
 
 	// setup
-	game.brickArea = new BrickArea(viewport.w / 100 * 5, 50, viewport.w / 100 * 90, viewport.h / 2, false);
-	// game.misc.pipes.push(new Pipe(0, 50, 64, viewport.h - 50));
-	// game.misc.pipes.push(new Pipe(viewport.w - 64, 50, 64, viewport.h - 50));
-	game.huds.statsHud = new StatsHud();
-	game.huds.powerUpHud = new PowerUpHud();
+	game.brickArea = new BrickArea(0, 45, viewport.w, viewport.h / 2, true);
+	game.UIs.statsUI = new StatsUI();
+	game.UIs.powerUpUI = new PowerUpUI();
 	game.playerBoard = new PlayerBoard();
 	game.orbs.push(new Orb(game.playerBoard.x, game.playerBoard.y - 10));
 	// game.devOrb = new DevOrb();
 	// game.powerUps.push(new xxlBoard(0, 0));
 
-	level_0();
+	// level_0();
+	level_1();
 
 	gameLoop();
 }
@@ -90,8 +89,8 @@ const gameLoop = () => {
 	if (game.boardControl.right) game.playerBoard.moveRight();
 
 	// GAME COMPONENTS
-	game.huds.statsHud.draw();
-	game.huds.powerUpHud.draw();
+	game.UIs.statsUI.draw();
+	game.UIs.powerUpUI.draw();
 	game.playerBoard.draw();
 	// game.devOrb.isColliding();
 	// game.devOrb.draw();
@@ -125,6 +124,7 @@ const gameLoop = () => {
 			game.orbs[i].y = game.playerBoard.y - 10;
 		}
 		game.orbs[i].draw();
+		game.orbs[i].drawTrail();
 	}
 
 	requestAnimationFrame(gameLoop);
