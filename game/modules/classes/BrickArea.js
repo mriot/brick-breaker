@@ -5,7 +5,7 @@ class BrickArea {
 		this.w = w;
 		this.h = h;
 		this.renderGrid = renderGrid;
-		this.segmentsPerRow = 4;// grid
+		this.segmentsPerRow = 5;// grid
 
 		// generate grid
 		let offsetX = this.x;
@@ -24,9 +24,11 @@ class BrickArea {
 		}
 
 		this.draw = () => {
+			ctx.save();
 			ctx.fillStyle = "rgba(0, 255, 0, 0.1)";
 			ctx.fillRect(game.brickArea.x, game.brickArea.y, game.brickArea.w, game.brickArea.h);
 			ctx.fill();
+			ctx.restore();
 		}
 	}
 }

@@ -19,9 +19,11 @@ class PowerUp {
 		}
 
 		this.draw = () => {
+			ctx.save();
 			ctx.fillStyle = this.color;
 			ctx.fillRect(this.x, this.y, this.w, this.h);
 			ctx.fill();
+			ctx.restore();
 		}
 	}
 }

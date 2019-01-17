@@ -1,4 +1,4 @@
-class xxlBoard extends PowerUp {
+class XXLBoard extends PowerUp {
 	constructor(x, y) {
 		super(x, y, 'XXL Board');
 		this.lifetime = 30;// seconds

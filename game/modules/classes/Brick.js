@@ -1,10 +1,9 @@
 class Brick {
-	constructor(x, y, color) {
+	constructor(x, y) {
 		this.x = x;
 		this.y = y;
-		this.w = game.brickArea.w / 15 - 5;
-		this.h = this.w / 2;
-		this.fillColor = color;
+		this.w = 60;
+		this.h = 40;
 		this.hidden = false;
 		this.hitsRequired = 1;
 		this.texture = new Image(0, 0);
@@ -27,8 +26,8 @@ class Brick {
 			if (Math.round(Math.random() * 5) === 1 || false) {
 				let num = Math.round(Math.random() * 5);
 				num = 0;
-				if (num === 0) game.powerUps.push(new xxlBoard(this.x, this.y));
-				if (num === 1) game.powerUps.push(new stickyBoard(this.x, this.y));
+				if (num === 0) game.powerUps.push(new XXLBoard(this.x, this.y));
+				if (num === 1) game.powerUps.push(new StickyBoard(this.x, this.y));
 			}
 		}
 

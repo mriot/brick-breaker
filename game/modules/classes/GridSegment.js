@@ -9,9 +9,11 @@ class GridSegment {
 		this.contains = [];
 
 		this.draw = () => {
+			ctx.save();
 			ctx.strokeStyle = this.color;
 			ctx.strokeRect(this.x, this.y, this.w, this.h);
 			ctx.fillText(this.id, this.x + this.w / 2.2, this.y + this.h / 1.6);
+			ctx.restore();
 		}
 	}
 }
