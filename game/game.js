@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			powerUpUI: null
 		},
 		misc: {
+			texts: {
+				startGame: ""
+			},
 			pipes: [],
 			background: null
 		}
@@ -34,11 +37,15 @@ const init = () => {
 	canvas.width = viewport.w;
 	canvas.height = viewport.h;
 
+	// background image
 	game.misc.background = new Image(0, 0);
 	game.misc.background.src = 'img/background.jpg';
 
-	// setup
-	game.brickArea = new BrickArea(0, 45, viewport.w, viewport.h / 2, true);
+	// game-start text
+	game.misc.texts.startGame = new TextUI('Press [SPACE] to start', 'center', viewport.h / 1.15, '#fff', '40px Arial');
+
+	// game setup
+	game.brickArea = new BrickArea(0, 45, viewport.w, viewport.h / 2, false);
 	game.UIs.statsUI = new StatsUI();
 	game.UIs.powerUpUI = new PowerUpUI();
 	game.playerBoard = new PlayerBoard();
@@ -60,9 +67,10 @@ const gameLoop = () => {
 	ctx.fillStyle = 'rgba(22, 22, 24, 0.75)';
 	ctx.fillRect(0, 0, viewport.w, viewport.h);
 
-	for (let i = 0; i < game.misc.pipes.length; i++) {
-		game.misc.pipes[i].draw();
-	}
+	// visual boundaries
+	// for (let i = 0; i < game.misc.pipes.length; i++) {
+	// 	game.misc.pipes[i].draw();
+	// }
 
 	// whether to render grid or not
 	if (game.brickArea.renderGrid) {
@@ -94,6 +102,9 @@ const gameLoop = () => {
 	game.playerBoard.draw();
 	// game.devOrb.isColliding();
 	// game.devOrb.draw();
+
+	// display 'game start' text while game is not running
+	if (!game.running) game.misc.texts.startGame.pulse();
 
 	// BRICKS
 	let bricks = game.bricks.length;
@@ -132,13 +143,13 @@ const gameLoop = () => {
 
 
 // EVENT LISTENER ============================================================
-// keyCodes: 65 = A // 68 = D // 87 = W // 83 = S // 96 = E // 32 = SPACE
 document.addEventListener('mousemove', e => {
 	// game.devOrb.move(e);
 	// game.powerUps[0].x = e.pageX;
 	// game.powerUps[0].y = e.pageY;
 });
 
+// keyCodes: 65 = A // 68 = D // 87 = W // 83 = S // 96 = E // 32 = SPACE
 document.addEventListener('keydown', e => {
 	// console.log(e.keyCode);
 	// spacebar to launch orb from board (and start the game)
@@ -198,25 +209,26 @@ const level_0 = () => {
 }
 
 const level_1 = () => {
-	let blocksPerRow, offsetX = 0;
-	let center = (blocksPerRow) => {
+	let rowCount = 0, offsetX = 0;
+	let center = blocksPerRow => {
 		return ((blocksPerRow * 60) - viewport.w) / 2 * -1;
 	}
 
-
-	const createRow = (blocksPerRow, rowNumber) => {
+	const createRow = blocksPerRow => {
 		for (var i = 0; i < blocksPerRow; i++) {
 			offsetX = (i * 60) + center(blocksPerRow);
-			game.bricks.push(new Brick(offsetX, game.brickArea.y + (rowNumber * 43)));
+			game.bricks.push(new Brick(offsetX, game.brickArea.y + (rowCount * 43)));
 		}
+		rowCount++;
 	}
 
-	createRow(20, 0);
-	createRow(10, 1);
-	createRow(15, 2);
-	createRow(2, 3);
-	createRow(11, 4);
-	createRow(6, 5);
+	createRow(20);
+	createRow(10);
+	createRow(15);
+	createRow(2);
+	createRow(11);
+	createRow(4);
+	createRow(6);
 }
 
 class Brick {
@@ -314,6 +326,23 @@ class GridSegment {
 			ctx.strokeRect(this.x, this.y, this.w, this.h);
 			ctx.fillText(this.id, this.x + this.w / 2.2, this.y + this.h / 1.6);
 			ctx.restore();
+		}
+	}
+}
+
+class LevelGenerator {
+	constructor(blocksPerRow, rowNumber) {
+		this.offsetX = 0;
+
+		this.center = () => {
+			return ((blocksPerRow * 60) - viewport.w) / 2 * -1;
+		}
+
+		this.createRow = (blocksPerRow, rowNumber) => {
+			for (var i = 0; i < blocksPerRow; i++) {
+				this.offsetX = (i * 60) + this.center(blocksPerRow);
+				game.bricks.push(new Brick(this.offsetX, game.brickArea.y + (rowNumber * 43)));
+			}
 		}
 	}
 }
@@ -564,19 +593,36 @@ class StatsUI {
 	}
 }
 
-class LevelGenerator {
-	constructor(blocksPerRow, rowNumber) {
-		this.offsetX = 0;
+class TextUI {
+	constructor(text, x, y, color = '#fff', font = '16px Arial') {
+		this.text = text;
+		this.x = x;
+		this.y = y;
+		this.font = font;
+		this.fillStyle = color;
+		this.pulseInc = false;
+		this.alpha = 1;
 
-		this.center = () => {
-			return ((blocksPerRow * 60) - viewport.w) / 2 * -1;
+		this.pulse = () => {
+			if (this.pulseInc) {
+				if (this.alpha >= 0.8) this.pulseInc = false;
+				this.alpha += 0.01;
+			} else {
+				if (this.alpha <= 0.1) this.pulseInc = true;
+				this.alpha -= 0.01;
+			}
+			this.draw();
 		}
 
-		this.createRow = (blocksPerRow, rowNumber) => {
-			for (var i = 0; i < blocksPerRow; i++) {
-				this.offsetX = (i * 60) + this.center(blocksPerRow);
-				game.bricks.push(new Brick(this.offsetX, game.brickArea.y + (rowNumber * 43)));
-			}
+		this.draw = () => {
+			ctx.save();
+			ctx.font = this.font;
+			ctx.globalAlpha = this.alpha;
+			ctx.fillStyle = this.fillStyle;
+			if (this.x == 'center') this.x = viewport.w / 2 - ctx.measureText(this.text).width / 2;
+			if (this.y == 'center') this.y = viewport.h / 2 + 10;
+			ctx.fillText(this.text, this.x, this.y);
+			ctx.restore();
 		}
 	}
 }
