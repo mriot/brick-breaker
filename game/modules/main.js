@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		gridSegments: [],
 		powerUps: [],
 		equippedPowerUp: null,
+		activePowerUp: null,
 		UIs: {
 			statsUI: null,
 			powerUpUI: null
@@ -153,10 +154,10 @@ document.addEventListener('mousemove', e => {
 document.addEventListener('keydown', e => {
 	// console.log(e.keyCode);
 	// spacebar to launch orb from board (and start the game)
-	if (!game.running && e.keyCode === 32) {
+	if (e.keyCode === 32 && !game.running) {
 		game.running = true;
 	}
-	if (game.running && game.equippedPowerUp && e.keyCode === 69) {// E
+	if (e.keyCode === 69 && game.running && game.equippedPowerUp) {// E
 		game.equippedPowerUp.activate();
 	}
 	if (e.keyCode === 68) {// D
