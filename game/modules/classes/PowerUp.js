@@ -1,11 +1,13 @@
 class PowerUp {
-	constructor(x, y, name) {
+	constructor(x, y, name, icon) {
 		this.x = x;
 		this.y = y;
 		this.vy = 5;
 		this.w = 50;
 		this.h = 25;
 		this.hidden = false;
+		this.icon = new Image(100, 100);
+		this.icon.src = 'img/' + icon;
 		this.color = 'purple';
 
 		this.collected = () => {
@@ -22,7 +24,7 @@ class PowerUp {
 			ctx.save();
 			ctx.fillStyle = this.color;
 			ctx.fillRect(this.x, this.y, this.w, this.h);
-			ctx.fill();
+			ctx.drawImage(this.icon, this.x, this.y);
 			ctx.restore();
 		}
 	}
