@@ -1,4 +1,6 @@
 const level_0 = () => {
+	game.UIs.statsUI.level = 0;
+
 	let brickSize = {
 		w: game.brickArea.w / 15 - 5,
 		h: (game.brickArea.w / 15 - 5) / 1.5

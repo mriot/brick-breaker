@@ -1,4 +1,6 @@
 const level_1 = () => {
+	game.UIs.statsUI.level = 1;
+
 	let rowCount = 0, offsetX = 0;
 	let center = blocksPerRow => {
 		return ((blocksPerRow * 60) - viewport.w) / 2 * -1;
