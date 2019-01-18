@@ -23,11 +23,11 @@ class Brick {
 		}
 
 		this.dropPowerUp = () => {
-			if (Math.round(Math.random() * 5) === 1 || false) {
-				let num = Math.round(Math.random() * 5);
+			if (Math.round(Math.random() * 5) === 1 || true) {
+				let num = Math.round(Math.random() * 2);
 				num = 0;
 				if (num === 0) game.powerUps.push(new XXLBoard(this.x, this.y));
-				if (num === 1) game.powerUps.push(new StickyBoard(this.x, this.y));
+				if (num === 1) game.powerUps.push(new MultiOrb(this.x, this.y));
 			}
 		}
 
