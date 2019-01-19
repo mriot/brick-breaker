@@ -1,5 +1,16 @@
-class GridSegment {
-	constructor(x, y, size, id, brickAreaSize) {
+import { ctx } from "../global";
+
+export class GridSegment {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    color: string;
+    id: number;
+    contains: any[];
+    draw: () => void;
+	
+	constructor(x: number, y: number, size: number, id: number, brickAreaSize: any) {
 		this.x = x;
 		this.y = y;
 		this.w = brickAreaSize.w / size;

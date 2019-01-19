@@ -1,4 +1,16 @@
-class TextUI {
+import { ctx, viewport } from "../global";
+
+export class TextUI {
+    text: any;
+    x: any;
+    y: any;
+    font: string;
+    fillStyle: string;
+    pulseInc: boolean;
+    alpha: number;
+    pulse: () => void;
+    draw: () => void;
+	
 	constructor(text, x, y, color = '#fff', font = '16px Arial') {
 		this.text = text;
 		this.x = x;

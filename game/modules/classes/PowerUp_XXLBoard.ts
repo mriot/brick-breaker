@@ -1,4 +1,11 @@
-class XXLBoard extends PowerUp {
+import { game } from "../global";
+import { PowerUp } from "./PowerUp";
+
+export class XXLBoard extends PowerUp {
+    lifetime: number;
+    id: number;
+    activate: () => void;
+
 	constructor(x, y) {
 		super(x, y, 'XXL Board', 'expand.png');
 		this.lifetime = 15;// seconds

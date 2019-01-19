@@ -1,4 +1,7 @@
-const level_1 = () => {
+import { game, viewport } from "../global";
+import { Brick } from "../classes/Brick";
+
+export const level_1 = () => {
 	game.UIs.statsUI.level = 1;
 
 	let rowCount = 0, offsetX = 0;

@@ -1,5 +1,16 @@
-class BrickArea {
-	constructor(x, y, w, h, renderGrid = false) {
+import { game, ctx } from "../global";
+import { GridSegment } from "./GridSegment";
+
+export class BrickArea {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    renderGrid: boolean;
+    segmentsPerRow: number;
+    draw: () => void;
+
+	constructor(x: number, y: number, w: number, h: number, renderGrid = false) {
 		this.x = x;
 		this.y = y;
 		this.w = w;

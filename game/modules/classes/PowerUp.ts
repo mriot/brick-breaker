@@ -1,4 +1,17 @@
-class PowerUp {
+import { game, ctx } from "../global";
+
+export class PowerUp {
+    x: any;
+    y: any;
+    vy: number;
+    w: number;
+    h: number;
+    hidden: boolean;
+    icon: HTMLImageElement;
+    color: string;
+    collected: () => boolean;
+	draw: () => void;
+
 	constructor(x, y, name, icon) {
 		this.x = x;
 		this.y = y;

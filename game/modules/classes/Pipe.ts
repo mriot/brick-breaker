@@ -1,4 +1,13 @@
-class Pipe {
+import { ctx } from "../global";
+
+export class Pipe {
+    x: any;
+    y: any;
+    w: any;
+    h: any;
+    texture: HTMLImageElement;
+    draw: () => void;
+
 	constructor(x, y, w, h) {
 		this.x = x;
 		this.y = y;

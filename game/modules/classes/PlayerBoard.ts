@@ -1,4 +1,19 @@
-class PlayerBoard {
+import { viewport, ctx } from "../global";
+
+export class PlayerBoard {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    w: number;
+    h: number;
+    sticky: boolean;
+    fillColor: string;
+    texture: HTMLImageElement;
+    draw: () => void;
+    moveLeft: () => void;
+    moveRight: () => void;
+
 	constructor() {
 		this.x = viewport.w / 2;
 		this.y = viewport.h - 25;

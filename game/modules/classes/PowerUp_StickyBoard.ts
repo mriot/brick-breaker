@@ -1,6 +1,12 @@
-class StickyBoard extends PowerUp {
+import { game } from "../global";
+import { PowerUp } from "./PowerUp";
+
+export class StickyBoard extends PowerUp {
+    lifetime: number;
+    activate: () => void;
+
 	constructor(x, y) {
-		super(x, y, 'Sticky Board');
+		super(x, y, 'Sticky Board', '');
 		this.lifetime = 30;
 
 		this.activate = () => {

@@ -1,39 +1,46 @@
-document.addEventListener('DOMContentLoaded', () => {
-	// VARS AND STUFF ============================================================
-	window.canvas = document.querySelector('#canvas');
-	window.viewport = {w: window.innerWidth, h: window.innerHeight};
-	window.ctx = canvas.getContext('2d');
-	window.game = {
-		running: false,
-		boardControl: {left: false, right: false, top: false, bottom: false},
-		devOrb: null,
-		playerBoard: null,
-		brickArea: null,
-		orbs: [],
-		bricks: [],
-		gridSegments: [],
-		powerUps: [],
-		equippedPowerUp: null,
-		activePowerUp: null,
-		UIs: {
-			statsUI: null,
-			powerUpUI: null
-		},
-		misc: {
-			texts: {
-				startGame: ""
-			},
-			pipes: [],
-			background: null
-		}
-	};
+import { canvas, ctx, viewport, game } from './global';
+import { TextUI } from './classes/TextUI';
+import { BrickArea } from './classes/BrickArea';
+import { StatsUI } from './classes/StatsUI';
+import { PowerUpUI } from './classes/PowerUpUI';
+import { PlayerBoard } from './classes/PlayerBoard';
+import { Orb } from './classes/Orb';
+import { level_1 } from './level/level-1';
 
-	// INIT GAME ============================================================
-	init();
-});
-
+// INIT GAME ============================================================
+document.addEventListener('DOMContentLoaded', () => init())
 
 const init = () => {
+	// keyCodes: 65 = A // 68 = D // 87 = W // 83 = S // 96 = E // 32 = SPACE
+	document.addEventListener('keydown', e => {
+		// console.log(e.keyCode);
+		// spacebar to launch orb from board (and start the game)
+		if (e.keyCode === 32 && !game.running) {
+			game.running = true;
+		}
+		if (e.keyCode === 69 && game.running && game.equippedPowerUp) {// E
+			game.equippedPowerUp.activate();
+		}
+		// let boardControl: any = {left: false, right: false};
+		if (e.keyCode === 68) {// D
+			game.boardControl.right = true;
+			game.boardControl.left = false;
+		}
+		if (e.keyCode === 65) {// A
+			game.boardControl.left = true;
+			game.boardControl.right = false;
+		}
+	});
+
+	document.addEventListener('keyup', e => {
+		if (e.keyCode === 68) game.boardControl.right = false;
+		if (e.keyCode === 65) game.boardControl.left = false;
+	});
+
+	// document.addEventListener('mousemove', e => {
+	//
+	// });
+
 	// canvas dimensions
 	canvas.width = viewport.w;
 	canvas.height = viewport.h;
@@ -51,35 +58,29 @@ const init = () => {
 	game.UIs.powerUpUI = new PowerUpUI();
 	game.playerBoard = new PlayerBoard();
 	game.orbs.push(new Orb(game.playerBoard.x, game.playerBoard.y - 10));
-	// game.devOrb = new DevOrb();
-	// game.powerUps.push(new xxlBoard(0, 0));
 
-	// level_0();
 	level_1();
 
 	gameLoop();
 }
 
-
 const gameLoop = () => {
-	// refresh canvas
+	// draw background image
 	ctx.drawImage(game.misc.background, 0, 0, viewport.w, viewport.h);
 
+	// refresh canvas
 	ctx.fillStyle = 'rgba(22, 22, 24, 0.75)';
 	ctx.fillRect(0, 0, viewport.w, viewport.h);
-
-	// visual boundaries
-	// for (let i = 0; i < game.misc.pipes.length; i++) {
-	// 	game.misc.pipes[i].draw();
-	// }
 
 	// whether to render grid or not
 	if (game.brickArea.renderGrid) {
 		game.brickArea.draw();
+
 		let segments = game.gridSegments.length;
 		for (let i = 0; i < segments; i++) {
 			game.gridSegments[i].draw();
 		}
+
 		// ruler
 		ctx.strokeStyle = 'darkred';
 		ctx.beginPath();
@@ -101,8 +102,6 @@ const gameLoop = () => {
 	game.UIs.statsUI.draw();
 	game.UIs.powerUpUI.draw();
 	game.playerBoard.draw();
-	// game.devOrb.isColliding();
-	// game.devOrb.draw();
 
 	// display 'game start' text while game is not running
 	if (!game.running) game.misc.texts.startGame.pulse();
@@ -139,41 +138,7 @@ const gameLoop = () => {
 		game.orbs[i].drawTrail();
 	}
 
-	requestAnimationFrame(gameLoop);
+	requestAnimationFrame(() => {
+		gameLoop()
+	});
 }
-
-
-// EVENT LISTENER ============================================================
-document.addEventListener('mousemove', e => {
-	// game.devOrb.move(e);
-	// game.powerUps[0].x = e.pageX;
-	// game.powerUps[0].y = e.pageY;
-});
-
-// keyCodes: 65 = A // 68 = D // 87 = W // 83 = S // 96 = E // 32 = SPACE
-document.addEventListener('keydown', e => {
-	// console.log(e.keyCode);
-	// spacebar to launch orb from board (and start the game)
-	if (e.keyCode === 32 && !game.running) {
-		game.running = true;
-	}
-	if (e.keyCode === 69 && game.running && game.equippedPowerUp) {// E
-		game.equippedPowerUp.activate();
-	}
-	if (e.keyCode === 68) {// D
-		game.boardControl.right = true;
-		game.boardControl.left = false;
-	}
-	if (e.keyCode === 65) {// A
-		game.boardControl.left = true;
-		game.boardControl.right = false;
-	}
-});
-
-document.addEventListener('keyup', e => {
-	if (e.keyCode === 68) game.boardControl.right = false;
-	if (e.keyCode === 65) game.boardControl.left = false;
-});
-
-
-// CLASSES ============================================================

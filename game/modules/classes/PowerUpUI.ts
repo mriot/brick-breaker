@@ -1,4 +1,15 @@
-class PowerUpUI {
+import { viewport, ctx } from "../global";
+
+export class PowerUpUI {
+    x: number;
+    y: number;
+    w: any;
+    h: number;
+    powerUpLifetime: number;
+    initLifetime: number;
+    timer: (lifetime: any) => void;
+	draw: () => void;
+
 	constructor() {
 		this.x = viewport.w - 40;
 		this.y = 0;

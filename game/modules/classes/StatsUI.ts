@@ -1,4 +1,11 @@
-class StatsUI {
+import { viewport, ctx } from "../global";
+
+export class StatsUI {
+    w: number;
+    h: number;
+    level: number;
+    draw: () => void;
+
 	constructor() {
 		this.w = viewport.w / 100 * 25;
 		this.h = 30;

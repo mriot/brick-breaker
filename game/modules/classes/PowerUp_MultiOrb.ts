@@ -1,4 +1,11 @@
-class MultiOrb extends PowerUp {
+import { game } from "../global";
+import { Orb } from "./Orb";
+import { PowerUp } from "./PowerUp";
+
+export class MultiOrb extends PowerUp {
+    id: number;
+    activate: () => void;
+
 	constructor(x, y) {
 		super(x, y, 'Multi Orb', 'brick_cracked.png');
 		this.id = 2;

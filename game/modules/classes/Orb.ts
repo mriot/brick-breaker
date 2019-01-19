@@ -1,4 +1,19 @@
-class Orb {
+import { game, viewport, ctx } from "../global";
+
+export class Orb {
+    x: any;
+    y: any;
+    vx: number;
+    vy: number;
+    radius: number;
+    fillColor: string;
+    maxTrailLength: number;
+    trail: any[];
+    hits: (obj: any) => boolean;
+    isColliding: () => void;
+    drawTrail: () => void;
+    draw: () => void;
+
 	constructor(x, y) {
 		this.x = x;
 		this.y = y;
