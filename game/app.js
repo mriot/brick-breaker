@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
 const PowerUp_MultiOrb_1 = require("./PowerUp_MultiOrb");
 const PowerUp_XXLBoard_1 = require("./PowerUp_XXLBoard");
+const GridSegment_1 = require("./GridSegment");
 class Brick {
     constructor(x, y) {
         this.x = x;
@@ -14,25 +15,21 @@ class Brick {
         this.hitsRequired = 1;
         this.texture = new Image(0, 0);
         this.texture.src = 'img/brick.png';
-        let within = (segment) => {
-            if ((this.x + this.w) >= segment.x && this.x <= (segment.x + segment.w) && (this.y + this.h) >= segment.y && this.y <= (segment.y + segment.h)) {
-                return true;
-            }
-        };
-        // segment check
-        for (let i = 0; i < global_1.game.gridSegments.length; i++) {
-            if (within(global_1.game.gridSegments[i])) {
-                global_1.game.gridSegments[i].contains.push(this);
+        Brick.instances.push(this);
+        // segment assignment
+        for (let i = 0; i < GridSegment_1.GridSegment.instances.length; i++) {
+            let seg = GridSegment_1.GridSegment.instances[i];
+            if ((this.x + this.w) >= seg.x && this.x <= (seg.x + seg.w) && (this.y + this.h) >= seg.y && this.y <= (seg.y + seg.h)) {
+                GridSegment_1.GridSegment.instances[i].contains.push(this);
             }
         }
         this.dropPowerUp = () => {
-            if (Math.round(Math.random() * 5) === 1 || true) {
+            if (Math.round(Math.random() * 5) === 1 || false) {
                 let num = Math.round(Math.random() * 2);
-                num = 0;
                 if (num === 0)
-                    global_1.game.powerUps.push(new PowerUp_XXLBoard_1.XXLBoard(this.x, this.y));
+                    new PowerUp_XXLBoard_1.XXLBoard(this.x, this.y);
                 if (num === 1)
-                    global_1.game.powerUps.push(new PowerUp_MultiOrb_1.MultiOrb(this.x, this.y));
+                    new PowerUp_MultiOrb_1.MultiOrb(this.x, this.y);
             }
         };
         this.draw = () => {
@@ -43,28 +40,35 @@ class Brick {
         };
     }
 }
+Brick.instances = [];
+Brick.render = () => {
+    for (let i = 0; i < Brick.instances.length; i++) {
+        if (!Brick.instances[i].hidden) {
+            Brick.instances[i].draw();
+        }
+    }
+};
 exports.Brick = Brick;
 
-},{"../global":12,"./PowerUp_MultiOrb":8,"./PowerUp_XXLBoard":9}],2:[function(require,module,exports){
+},{"../global":12,"./GridSegment":3,"./PowerUp_MultiOrb":8,"./PowerUp_XXLBoard":9}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
 const GridSegment_1 = require("./GridSegment");
 class BrickArea {
-    constructor(x, y, w, h, renderGrid = false) {
+    constructor(x, y, w, h) {
         this.x = x;
         this.y = y;
         this.w = w;
         this.h = h;
-        this.renderGrid = renderGrid;
-        this.segmentsPerRow = 5; // grid
-        // generate grid
+        this.segmentsPerRow = 5;
+        BrickArea.instance = this;
+        // generate grid segments
         let offsetX = this.x;
         let offsetY = this.y;
-        let col = 1; // "next line" -controller
+        let col = 1;
         for (let i = 0; i < this.segmentsPerRow * this.segmentsPerRow; i++) {
-            // the object parameter contains width and height of THIS (= BrickArea).
-            global_1.game.gridSegments.push(new GridSegment_1.GridSegment(offsetX, offsetY, this.segmentsPerRow, i, { w: this.w, h: this.h }));
+            new GridSegment_1.GridSegment(offsetX, offsetY, this.segmentsPerRow, i);
             offsetX += this.w / this.segmentsPerRow;
             if (col === this.segmentsPerRow) {
                 offsetX = this.x; // initial value
@@ -76,27 +80,48 @@ class BrickArea {
         this.draw = () => {
             global_1.ctx.save();
             global_1.ctx.fillStyle = "rgba(0, 255, 0, 0.1)";
-            global_1.ctx.fillRect(global_1.game.brickArea.x, global_1.game.brickArea.y, global_1.game.brickArea.w, global_1.game.brickArea.h);
+            global_1.ctx.fillRect(this.x, this.y, this.w, this.h);
             global_1.ctx.fill();
+            global_1.ctx.restore();
+            GridSegment_1.GridSegment.render();
+            // Ruler
+            global_1.ctx.save();
+            global_1.ctx.strokeStyle = 'darkred';
+            // vertical
+            global_1.ctx.beginPath();
+            global_1.ctx.moveTo(global_1.viewport.w / 2, 0);
+            global_1.ctx.lineTo(global_1.viewport.w / 2, global_1.viewport.h);
+            global_1.ctx.stroke();
+            // horizontal
+            global_1.ctx.beginPath();
+            global_1.ctx.moveTo(0, global_1.viewport.h / 2);
+            global_1.ctx.lineTo(global_1.viewport.w, global_1.viewport.h / 2);
+            global_1.ctx.stroke();
             global_1.ctx.restore();
         };
     }
 }
+BrickArea.instance = null;
+BrickArea.render = () => {
+    BrickArea.instance.draw();
+};
 exports.BrickArea = BrickArea;
 
 },{"../global":12,"./GridSegment":3}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
+const BrickArea_1 = require("./BrickArea");
 class GridSegment {
-    constructor(x, y, size, id, brickAreaSize) {
+    constructor(x, y, size, id) {
         this.x = x;
         this.y = y;
-        this.w = brickAreaSize.w / size;
-        this.h = brickAreaSize.h / size;
+        this.w = BrickArea_1.BrickArea.instance.w / size;
+        this.h = BrickArea_1.BrickArea.instance.h / size;
         this.color = 'rgba(0, 255, 255, 0.5)';
         this.id = id;
         this.contains = [];
+        GridSegment.instances.push(this);
         this.draw = () => {
             global_1.ctx.save();
             global_1.ctx.strokeStyle = this.color;
@@ -106,27 +131,49 @@ class GridSegment {
         };
     }
 }
+GridSegment.instances = [];
+GridSegment.render = () => {
+    for (let i = 0; i < GridSegment.instances.length; i++) {
+        GridSegment.instances[i].draw();
+    }
+};
 exports.GridSegment = GridSegment;
 
-},{"../global":12}],4:[function(require,module,exports){
+},{"../global":12,"./BrickArea":2}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
+const PlayerBoard_1 = require("./PlayerBoard");
+const BrickArea_1 = require("./BrickArea");
+const GridSegment_1 = require("./GridSegment");
 class Orb {
     constructor(x, y) {
         this.x = x;
         this.y = y;
         this.vx = Math.floor(Math.random() * 5 + 3);
-        this.vy = 1;
+        this.vy = 5;
         this.radius = 6;
         this.fillColor = 'cyan';
-        this.maxTrailLength = 5;
+        this.maxTrailLength = 7;
         this.trail = [];
+        // once constructed, push instance into array
+        Orb.instances.push(this);
+        // remove instance from array
+        this.kill = () => {
+            for (let i = 0; i < Orb.instances.length; i++) {
+                if (Orb.instances[i] === this) {
+                    Orb.instances.splice(i, 1);
+                }
+            }
+            if (Orb.instances.length === 0) {
+                console.log("GAME OVER");
+            }
+        };
         this.hits = (obj) => {
             return (this.x + this.radius) >= obj.x && this.x + this.radius <= (obj.x + obj.w + this.radius * 2) && (this.y + this.radius) >= obj.y && this.y + this.radius <= (obj.y + obj.h + this.radius * 2);
         };
         this.isColliding = () => {
-            let segments = global_1.game.gridSegments;
+            let segments = GridSegment_1.GridSegment.instances;
             for (let i = 0; i < segments.length; i++) {
                 if (this.hits(segments[i])) {
                     for (let j = 0; j < segments[i].contains.length; j++) {
@@ -140,10 +187,10 @@ class Orb {
                 }
             }
             // wall collision
-            if (this.y - this.radius < global_1.game.brickArea.y) {
+            if (this.y - this.radius < BrickArea_1.BrickArea.instance.y) {
                 this.vy *= -1;
-                this.y = global_1.game.brickArea.y + this.radius;
-            } // top
+                this.y = BrickArea_1.BrickArea.instance.y + this.radius;
+            } // top wall
             if (this.x - this.radius < 0) {
                 this.vx *= -1;
                 this.x = this.radius;
@@ -152,17 +199,19 @@ class Orb {
                 this.vx *= -1;
                 this.x = global_1.viewport.w - this.radius;
             } // right wall
+            if (this.y + this.radius > global_1.viewport.h) {
+                this.kill();
+            } // bottom 'wall'
             // board collision
-            let distX = (this.x + this.radius) - (global_1.game.playerBoard.x - global_1.game.playerBoard.w / 2);
-            let distY = (this.y + this.radius) - global_1.game.playerBoard.y;
-            if ((distX >= 0 && distX <= global_1.game.playerBoard.w + this.radius * 2) && (distY >= 0 && distY <= global_1.game.playerBoard.h + this.radius * 2)) {
-                if (global_1.game.playerBoard.sticky) {
+            let distX = (this.x + this.radius) - (PlayerBoard_1.PlayerBoard.instance.x - PlayerBoard_1.PlayerBoard.instance.w / 2);
+            let distY = (this.y + this.radius) - PlayerBoard_1.PlayerBoard.instance.y;
+            if ((distX >= 0 && distX <= PlayerBoard_1.PlayerBoard.instance.w + this.radius * 2) && (distY >= 0 && distY <= PlayerBoard_1.PlayerBoard.instance.h + this.radius * 2)) {
+                if (PlayerBoard_1.PlayerBoard.instance.sticky) {
                     this.vy = 0;
                     this.vx = 0;
                 }
                 else {
-                    this.vy = Math.floor(Math.random() * 5 + 5) * -1;
-                    // this.vx = Math.floor(Math.random() * 5 + 5) * -1;
+                    this.vy *= -1;
                 }
             }
         };
@@ -185,6 +234,17 @@ class Orb {
         };
         this.draw = () => {
             global_1.ctx.save();
+            if (global_1.game.running) {
+                this.isColliding();
+                this.x += this.vx;
+                this.y += this.vy;
+                this.drawTrail();
+            }
+            else {
+                // stick orb to player board until game is running
+                this.x = PlayerBoard_1.PlayerBoard.instance.x;
+                this.y = PlayerBoard_1.PlayerBoard.instance.y - 10;
+            }
             global_1.ctx.fillStyle = this.fillColor;
             global_1.ctx.beginPath();
             global_1.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
@@ -193,9 +253,15 @@ class Orb {
         };
     }
 }
+Orb.instances = [];
+Orb.render = () => {
+    for (let i = 0; i < Orb.instances.length; i++) {
+        Orb.instances[i].draw();
+    }
+};
 exports.Orb = Orb;
 
-},{"../global":12}],5:[function(require,module,exports){
+},{"../global":12,"./BrickArea":2,"./GridSegment":3,"./PlayerBoard":5}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -211,6 +277,7 @@ class PlayerBoard {
         this.fillColor = '#fff';
         this.texture = new Image(0, 0);
         // this.texture.src = 'img/paddle.png';
+        PlayerBoard.instance = this;
         this.moveLeft = () => {
             if (this.x - this.w / 2 > 0)
                 this.x -= this.vx;
@@ -220,12 +287,16 @@ class PlayerBoard {
                 this.x += this.vx;
         };
         this.draw = () => {
+            if (PlayerBoard.controls.left)
+                this.moveLeft();
+            if (PlayerBoard.controls.right)
+                this.moveRight();
             global_1.ctx.save();
             global_1.ctx.fillStyle = this.fillColor;
             global_1.ctx.shadowBlur = 10;
             global_1.ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
             global_1.ctx.fillRect(this.x - this.w / 2, this.y, this.w, this.h);
-            global_1.ctx.drawImage(this.texture, this.x - this.w / 2, this.y, this.w, this.h);
+            // ctx.drawImage(this.texture, this.x - this.w / 2, this.y, this.w, this.h);
             global_1.ctx.fill();
             global_1.ctx.restore();
             // ctx.font = "14px Arial";
@@ -233,12 +304,18 @@ class PlayerBoard {
         };
     }
 }
+PlayerBoard.controls = { left: false, right: false };
+PlayerBoard.instance = null;
+PlayerBoard.render = () => {
+    PlayerBoard.instance.draw();
+};
 exports.PlayerBoard = PlayerBoard;
 
 },{"../global":12}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
+const PlayerBoard_1 = require("./PlayerBoard");
 class PowerUp {
     constructor(x, y, name, icon) {
         this.x = x;
@@ -246,31 +323,52 @@ class PowerUp {
         this.vy = 5;
         this.w = 50;
         this.h = 25;
-        this.hidden = false;
         this.icon = new Image(100, 100);
         this.icon.src = 'img/' + icon;
-        this.color = 'purple';
-        this.collected = () => {
-            if (!this.hidden && (this.x + this.w) >= global_1.game.playerBoard.x - global_1.game.playerBoard.w / 2 && this.x <= (global_1.game.playerBoard.x + global_1.game.playerBoard.w / 2) && (this.y + this.h) >= global_1.game.playerBoard.y && this.y <= (global_1.game.playerBoard.y + global_1.game.playerBoard.h)) {
-                this.hidden = true;
+        // once constructed, push instance into array
+        PowerUp.instances.push(this);
+        // remove instance from array
+        this.kill = () => {
+            for (let i = 0; i < PowerUp.instances.length; i++) {
+                if (PowerUp.instances[i] === this) {
+                    PowerUp.instances.splice(i, 1);
+                }
+            }
+        };
+        // check if powerup got collected by player
+        this.gotCollected = () => {
+            if ((this.x + this.w) >= PlayerBoard_1.PlayerBoard.instance.x - PlayerBoard_1.PlayerBoard.instance.w / 2 && this.x <= (PlayerBoard_1.PlayerBoard.instance.x + PlayerBoard_1.PlayerBoard.instance.w / 2) && (this.y + this.h) >= PlayerBoard_1.PlayerBoard.instance.y && this.y <= (PlayerBoard_1.PlayerBoard.instance.y + PlayerBoard_1.PlayerBoard.instance.h)) {
                 console.log('power up ' + name + ' equipped!');
-                global_1.game.equippedPowerUp = this;
-                // TODO: remove from array
+                PowerUp.equipped = this;
                 return true;
             }
         };
         this.draw = () => {
-            global_1.ctx.save();
-            global_1.ctx.fillStyle = this.color;
-            global_1.ctx.fillRect(this.x, this.y, this.w, this.h);
-            global_1.ctx.drawImage(this.icon, this.x, this.y);
-            global_1.ctx.restore();
+            if (!this.gotCollected() && this.y < global_1.viewport.h) {
+                global_1.ctx.save();
+                this.y += this.vy;
+                global_1.ctx.drawImage(this.icon, this.x, this.y, this.w, this.h);
+                global_1.ctx.restore();
+            }
+            else {
+                // remove from instances array if powerup got collected or fell out of viewport
+                this.kill();
+            }
         };
     }
 }
+PowerUp.equipped = null;
+PowerUp.active = null;
+PowerUp.instances = []; // contains all powerups on screen
+// render all powerups on screen
+PowerUp.render = () => {
+    for (let i = 0; i < PowerUp.instances.length; i++) {
+        PowerUp.instances[i].draw();
+    }
+};
 exports.PowerUp = PowerUp;
 
-},{"../global":12}],7:[function(require,module,exports){
+},{"../global":12,"./PlayerBoard":5}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -282,6 +380,7 @@ class PowerUpUI {
         this.h = 5;
         this.powerUpLifetime = 0;
         this.initLifetime = 0;
+        PowerUpUI.instance = this;
         this.timer = lifetime => {
             this.powerUpLifetime = this.initLifetime = lifetime;
             let timer = setInterval(() => {
@@ -303,51 +402,50 @@ class PowerUpUI {
         };
     }
 }
+PowerUpUI.instance = null;
+PowerUpUI.render = () => {
+    PowerUpUI.instance.draw();
+};
 exports.PowerUpUI = PowerUpUI;
 
 },{"../global":12}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const global_1 = require("../global");
 const Orb_1 = require("./Orb");
 const PowerUp_1 = require("./PowerUp");
+const PlayerBoard_1 = require("./PlayerBoard");
 class MultiOrb extends PowerUp_1.PowerUp {
     constructor(x, y) {
-        super(x, y, 'Multi Orb', 'brick_cracked.png');
-        this.id = 2;
+        super(x, y, 'Multi Orb', 'powerup_multiorb.png');
         this.activate = () => {
-            if (!global_1.game.activePowerUp || global_1.game.activePowerUp.id !== this.id) {
-                for (var i = 0; i < 2; i++) {
-                    global_1.game.orbs.push(new Orb_1.Orb(global_1.game.playerBoard.x, global_1.game.playerBoard.y - 10));
-                }
-                global_1.game.activePowerUp = global_1.game.equippedPowerUp;
-                global_1.game.equippedPowerUp = null;
-            }
+            new Orb_1.Orb(PlayerBoard_1.PlayerBoard.instance.x, PlayerBoard_1.PlayerBoard.instance.y - 10);
+            new Orb_1.Orb(PlayerBoard_1.PlayerBoard.instance.x, PlayerBoard_1.PlayerBoard.instance.y - 10);
+            PowerUp_1.PowerUp.equipped = null;
         };
     }
 }
 exports.MultiOrb = MultiOrb;
 
-},{"../global":12,"./Orb":4,"./PowerUp":6}],9:[function(require,module,exports){
+},{"./Orb":4,"./PlayerBoard":5,"./PowerUp":6}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const global_1 = require("../global");
 const PowerUp_1 = require("./PowerUp");
+const PowerUpUI_1 = require("./PowerUpUI");
+const PlayerBoard_1 = require("./PlayerBoard");
 class XXLBoard extends PowerUp_1.PowerUp {
     constructor(x, y) {
-        super(x, y, 'XXL Board', 'expand.png');
+        super(x, y, 'XXL Board', 'powerup_xxlboard.png');
         this.lifetime = 15; // seconds
-        this.id = 1;
         this.activate = () => {
-            if (!global_1.game.activePowerUp || global_1.game.activePowerUp.id !== this.id) {
-                global_1.game.playerBoard.w *= 2;
-                global_1.game.activePowerUp = global_1.game.equippedPowerUp;
-                global_1.game.equippedPowerUp = null;
-                global_1.game.UIs.powerUpUI.timer(this.lifetime);
+            if (!PowerUp_1.PowerUp.active) {
+                PlayerBoard_1.PlayerBoard.instance.w *= 2;
+                PowerUp_1.PowerUp.active = PowerUp_1.PowerUp.equipped;
+                PowerUp_1.PowerUp.equipped = null;
+                PowerUpUI_1.PowerUpUI.instance.timer(this.lifetime);
                 // game.UIs.powerUpUI.icon(this.icon);
                 setTimeout(() => {
-                    global_1.game.playerBoard.w /= 2;
-                    global_1.game.activePowerUp = null;
+                    PlayerBoard_1.PlayerBoard.instance.w /= 2;
+                    PowerUp_1.PowerUp.active = null;
                 }, this.lifetime * 1000);
             }
         };
@@ -355,7 +453,7 @@ class XXLBoard extends PowerUp_1.PowerUp {
 }
 exports.XXLBoard = XXLBoard;
 
-},{"../global":12,"./PowerUp":6}],10:[function(require,module,exports){
+},{"./PlayerBoard":5,"./PowerUp":6,"./PowerUpUI":7}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -364,6 +462,7 @@ class StatsUI {
         this.w = global_1.viewport.w / 100 * 25;
         this.h = 30;
         this.level = 0;
+        StatsUI.instance = this;
         this.draw = () => {
             global_1.ctx.save();
             global_1.ctx.fillStyle = '#aaa';
@@ -376,6 +475,10 @@ class StatsUI {
         };
     }
 }
+StatsUI.instance = null;
+StatsUI.render = () => {
+    StatsUI.instance.draw();
+};
 exports.StatsUI = StatsUI;
 
 },{"../global":12}],11:[function(require,module,exports){
@@ -423,45 +526,28 @@ exports.TextUI = TextUI;
 },{"../global":12}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-let canvas = document.querySelector('#canvas');
-exports.canvas = canvas;
-let ctx = canvas.getContext('2d');
-exports.ctx = ctx;
-let viewport = { w: window.innerWidth, h: window.innerHeight };
-exports.viewport = viewport;
-let game = {
-    boardControl: { left: false, right: false },
+exports.canvas = document.querySelector('#canvas');
+exports.ctx = exports.canvas.getContext('2d');
+exports.viewport = { w: window.innerWidth, h: window.innerHeight };
+exports.game = {
     running: false,
-    devOrb: null,
-    playerBoard: null,
-    brickArea: null,
-    orbs: [],
-    bricks: [],
-    gridSegments: [],
-    powerUps: [],
-    equippedPowerUp: null,
-    activePowerUp: null,
-    UIs: {
-        statsUI: null,
-        powerUpUI: null
-    },
     misc: {
         texts: {
             startGame: ''
         },
-        pipes: [],
         background: null
     }
 };
-exports.game = game;
 
 },{}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
 const Brick_1 = require("../classes/Brick");
+const BrickArea_1 = require("../classes/BrickArea");
+const StatsUI_1 = require("../classes/StatsUI");
 exports.level_1 = () => {
-    global_1.game.UIs.statsUI.level = 1;
+    StatsUI_1.StatsUI.instance.level = 1;
     let rowCount = 0, offsetX = 0;
     let center = blocksPerRow => {
         return ((blocksPerRow * 60) - global_1.viewport.w) / 2 * -1;
@@ -469,7 +555,7 @@ exports.level_1 = () => {
     const createRow = blocksPerRow => {
         for (var i = 0; i < blocksPerRow; i++) {
             offsetX = (i * 60) + center(blocksPerRow);
-            global_1.game.bricks.push(new Brick_1.Brick(offsetX, global_1.game.brickArea.y + (rowCount * 43)));
+            new Brick_1.Brick(offsetX, BrickArea_1.BrickArea.instance.y + (rowCount * 43));
         }
         rowCount++;
     };
@@ -482,7 +568,7 @@ exports.level_1 = () => {
     createRow(6);
 };
 
-},{"../classes/Brick":1,"../global":12}],14:[function(require,module,exports){
+},{"../classes/Brick":1,"../classes/BrickArea":2,"../classes/StatsUI":10,"../global":12}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("./global");
@@ -493,6 +579,8 @@ const PowerUpUI_1 = require("./classes/PowerUpUI");
 const PlayerBoard_1 = require("./classes/PlayerBoard");
 const Orb_1 = require("./classes/Orb");
 const level_1_1 = require("./level/level-1");
+const PowerUp_1 = require("./classes/PowerUp");
+const Brick_1 = require("./classes/Brick");
 // INIT GAME ============================================================
 document.addEventListener('DOMContentLoaded', () => init());
 const init = () => {
@@ -503,28 +591,24 @@ const init = () => {
         if (e.keyCode === 32 && !global_1.game.running) {
             global_1.game.running = true;
         }
-        if (e.keyCode === 69 && global_1.game.running && global_1.game.equippedPowerUp) { // E
-            global_1.game.equippedPowerUp.activate();
+        if (e.keyCode === 69 && global_1.game.running && PowerUp_1.PowerUp.equipped) { // E
+            PowerUp_1.PowerUp.equipped.activate();
         }
-        // let boardControl: any = {left: false, right: false};
         if (e.keyCode === 68) { // D
-            global_1.game.boardControl.right = true;
-            global_1.game.boardControl.left = false;
+            PlayerBoard_1.PlayerBoard.controls.right = true;
+            PlayerBoard_1.PlayerBoard.controls.left = false;
         }
         if (e.keyCode === 65) { // A
-            global_1.game.boardControl.left = true;
-            global_1.game.boardControl.right = false;
+            PlayerBoard_1.PlayerBoard.controls.left = true;
+            PlayerBoard_1.PlayerBoard.controls.right = false;
         }
     });
     document.addEventListener('keyup', e => {
-        if (e.keyCode === 68)
-            global_1.game.boardControl.right = false;
         if (e.keyCode === 65)
-            global_1.game.boardControl.left = false;
+            PlayerBoard_1.PlayerBoard.controls.left = false;
+        if (e.keyCode === 68)
+            PlayerBoard_1.PlayerBoard.controls.right = false;
     });
-    // document.addEventListener('mousemove', e => {
-    //
-    // });
     // canvas dimensions
     global_1.canvas.width = global_1.viewport.w;
     global_1.canvas.height = global_1.viewport.h;
@@ -532,85 +616,45 @@ const init = () => {
     global_1.game.misc.background = new Image(0, 0);
     global_1.game.misc.background.src = 'img/background.jpg';
     // game-start text
-    global_1.game.misc.texts.startGame = new TextUI_1.TextUI('Press [SPACE] to start', 'center', global_1.viewport.h / 1.15, '#fff', '40px Arial');
+    global_1.game.misc.texts.startGame = new TextUI_1.TextUI('Press [SPACE] to start', 'center', global_1.viewport.h - 250, '#fff', '50px Arial');
+    global_1.game.misc.texts.moveLeft = new TextUI_1.TextUI('<< A', 10, global_1.viewport.h - 10, '#fff', '40px Arial');
+    global_1.game.misc.texts.moveRight = new TextUI_1.TextUI('D >>', global_1.viewport.w - 100, global_1.viewport.h - 10, '#fff', '40px Arial');
+    global_1.game.misc.texts.usePowerUp = new TextUI_1.TextUI('E = PowerUp', 'center', global_1.viewport.h - 75, '#fff', '20px Arial');
     // game setup
-    global_1.game.brickArea = new BrickArea_1.BrickArea(0, 45, global_1.viewport.w, global_1.viewport.h / 2, false);
-    global_1.game.UIs.statsUI = new StatsUI_1.StatsUI();
-    global_1.game.UIs.powerUpUI = new PowerUpUI_1.PowerUpUI();
-    global_1.game.playerBoard = new PlayerBoard_1.PlayerBoard();
-    global_1.game.orbs.push(new Orb_1.Orb(global_1.game.playerBoard.x, global_1.game.playerBoard.y - 10));
+    new BrickArea_1.BrickArea(0, 45, global_1.viewport.w, global_1.viewport.h / 2);
+    new StatsUI_1.StatsUI();
+    new PowerUpUI_1.PowerUpUI();
+    new PlayerBoard_1.PlayerBoard();
+    new Orb_1.Orb(PlayerBoard_1.PlayerBoard.instance.x, PlayerBoard_1.PlayerBoard.instance.y - 10);
     level_1_1.level_1();
     gameLoop();
 };
 const gameLoop = () => {
     // draw background image
     global_1.ctx.drawImage(global_1.game.misc.background, 0, 0, global_1.viewport.w, global_1.viewport.h);
-    // refresh canvas
+    // clear canvas
     global_1.ctx.fillStyle = 'rgba(22, 22, 24, 0.75)';
     global_1.ctx.fillRect(0, 0, global_1.viewport.w, global_1.viewport.h);
-    // whether to render grid or not
-    if (global_1.game.brickArea.renderGrid) {
-        global_1.game.brickArea.draw();
-        let segments = global_1.game.gridSegments.length;
-        for (let i = 0; i < segments; i++) {
-            global_1.game.gridSegments[i].draw();
-        }
-        // ruler
-        global_1.ctx.strokeStyle = 'darkred';
-        global_1.ctx.beginPath();
-        global_1.ctx.moveTo(global_1.viewport.w / 2, 0);
-        global_1.ctx.lineTo(global_1.viewport.w / 2, global_1.viewport.h);
-        global_1.ctx.stroke();
-        global_1.ctx.beginPath();
-        global_1.ctx.moveTo(0, global_1.viewport.h / 2);
-        global_1.ctx.lineTo(global_1.viewport.w, global_1.viewport.h / 2);
-        global_1.ctx.stroke();
-    }
-    // player board movement
-    if (global_1.game.boardControl.left)
-        global_1.game.playerBoard.moveLeft();
-    if (global_1.game.boardControl.right)
-        global_1.game.playerBoard.moveRight();
     // GAME COMPONENTS
-    global_1.game.UIs.statsUI.draw();
-    global_1.game.UIs.powerUpUI.draw();
-    global_1.game.playerBoard.draw();
+    // BrickArea.render();
+    StatsUI_1.StatsUI.render();
+    PowerUpUI_1.PowerUpUI.render();
+    Brick_1.Brick.render();
+    PowerUp_1.PowerUp.render();
+    PlayerBoard_1.PlayerBoard.render();
+    Orb_1.Orb.render();
     // display 'game start' text while game is not running
     if (!global_1.game.running)
         global_1.game.misc.texts.startGame.pulse();
-    // BRICKS
-    let bricks = global_1.game.bricks.length;
-    for (let i = 0; i < bricks; i++) {
-        if (!global_1.game.bricks[i].hidden) {
-            global_1.game.bricks[i].draw();
-        }
-    }
-    // POWERUPS
-    for (let i = 0; i < global_1.game.powerUps.length; i++) {
-        global_1.game.powerUps[i].collected();
-        if (!global_1.game.powerUps[i].hidden) {
-            global_1.game.powerUps[i].y += global_1.game.powerUps[i].vy;
-            global_1.game.powerUps[i].draw();
-        }
-    }
-    // ORBS
-    for (let i = 0; i < global_1.game.orbs.length; i++) {
-        if (global_1.game.running) {
-            global_1.game.orbs[i].isColliding();
-            global_1.game.orbs[i].x += global_1.game.orbs[i].vx;
-            global_1.game.orbs[i].y += global_1.game.orbs[i].vy;
-        }
-        else {
-            // stick orb to player board until game is running
-            global_1.game.orbs[i].x = global_1.game.playerBoard.x;
-            global_1.game.orbs[i].y = global_1.game.playerBoard.y - 10;
-        }
-        global_1.game.orbs[i].draw();
-        global_1.game.orbs[i].drawTrail();
-    }
+    if (!global_1.game.running)
+        global_1.game.misc.texts.moveLeft.draw();
+    if (!global_1.game.running)
+        global_1.game.misc.texts.moveRight.draw();
+    if (!global_1.game.running)
+        global_1.game.misc.texts.usePowerUp.draw();
     requestAnimationFrame(() => {
         gameLoop();
     });
 };
 
-},{"./classes/BrickArea":2,"./classes/Orb":4,"./classes/PlayerBoard":5,"./classes/PowerUpUI":7,"./classes/StatsUI":10,"./classes/TextUI":11,"./global":12,"./level/level-1":13}]},{},[14]);
+},{"./classes/Brick":1,"./classes/BrickArea":2,"./classes/Orb":4,"./classes/PlayerBoard":5,"./classes/PowerUp":6,"./classes/PowerUpUI":7,"./classes/StatsUI":10,"./classes/TextUI":11,"./global":12,"./level/level-1":13}]},{},[14]);

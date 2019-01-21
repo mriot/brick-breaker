@@ -1,0 +1,9 @@
+import { Orb } from "./Orb";
+import { PlayerBoard } from "./PlayerBoard";
+
+export class Collision {
+	public static Orb_PlayerBoard: any = (orb: Orb, paddle: PlayerBoard) => {
+		
+		return true;
+	}
+}
