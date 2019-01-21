@@ -10,6 +10,11 @@ export class PowerUpUI {
     timer: (lifetime: any) => void;
 	draw: () => void;
 
+	public static instance: PowerUpUI = null;
+	public static render = () => {
+		PowerUpUI.instance.draw()
+	}
+
 	constructor() {
 		this.x = viewport.w - 40;
 		this.y = 0;
@@ -17,6 +22,8 @@ export class PowerUpUI {
 		this.h = 5;
 		this.powerUpLifetime = 0;
 		this.initLifetime = 0;
+
+		PowerUpUI.instance = this;
 
 		this.timer = lifetime => {
 			this.powerUpLifetime = this.initLifetime = lifetime;

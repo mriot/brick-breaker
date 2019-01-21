@@ -1,29 +1,29 @@
 import { game } from "../global";
 import { PowerUp } from "./PowerUp";
+import { PowerUpUI } from "./PowerUpUI";
+import { PlayerBoard } from "./PlayerBoard";
 
 export class XXLBoard extends PowerUp {
     lifetime: number;
-    id: number;
     activate: () => void;
 
-	constructor(x, y) {
-		super(x, y, 'XXL Board', 'expand.png');
+	constructor(x: number, y: number) {
+		super(x, y, 'XXL Board', 'powerup_xxlboard.png');
 		this.lifetime = 15;// seconds
-		this.id = 1;
 
 		this.activate = () => {
-			if (!game.activePowerUp || game.activePowerUp.id !== this.id) {
-				game.playerBoard.w *= 2;
+			if (!PowerUp.active) {
+				PlayerBoard.instance.w *= 2;
 
-				game.activePowerUp = game.equippedPowerUp;
-				game.equippedPowerUp = null;
+				PowerUp.active = PowerUp.equipped;
+				PowerUp.equipped = null;
 
-				game.UIs.powerUpUI.timer(this.lifetime);
+				PowerUpUI.instance.timer(this.lifetime);
 				// game.UIs.powerUpUI.icon(this.icon);
 
 				setTimeout(() => {
-					game.playerBoard.w /= 2;
-					game.activePowerUp = null;
+					PlayerBoard.instance.w /= 2;
+					PowerUp.active = null;
 				}, this.lifetime * 1000)
 			}
 		}

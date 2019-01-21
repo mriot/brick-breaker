@@ -1,4 +1,5 @@
 import { ctx } from "../global";
+import { BrickArea } from "./BrickArea";
 
 export class GridSegment {
     x: number;
@@ -9,15 +10,24 @@ export class GridSegment {
     id: number;
     contains: any[];
     draw: () => void;
-	
-	constructor(x: number, y: number, size: number, id: number, brickAreaSize: any) {
+
+	public static instances: GridSegment[] = [];
+	public static render = () => {
+		for (let i = 0; i < GridSegment.instances.length; i++) {
+		    GridSegment.instances[i].draw();
+		}
+	}
+
+	constructor(x: number, y: number, size: number, id: number) {
 		this.x = x;
 		this.y = y;
-		this.w = brickAreaSize.w / size;
-		this.h = brickAreaSize.h / size;
+		this.w = BrickArea.instance.w / size;
+		this.h = BrickArea.instance.h / size;
 		this.color = 'rgba(0, 255, 255, 0.5)';
 		this.id = id;
 		this.contains = [];
+
+		GridSegment.instances.push(this);
 
 		this.draw = () => {
 			ctx.save();

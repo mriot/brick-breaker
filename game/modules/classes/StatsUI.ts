@@ -6,11 +6,17 @@ export class StatsUI {
     level: number;
     draw: () => void;
 
+	public static instance: StatsUI = null;
+	public static render = () => {
+		StatsUI.instance.draw();
+	}
+
 	constructor() {
 		this.w = viewport.w / 100 * 25;
 		this.h = 30;
-
 		this.level = 0;
+
+		StatsUI.instance = this;
 
 		this.draw = () => {
 			ctx.save();

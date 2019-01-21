@@ -1,4 +1,4 @@
-import { game, ctx } from "../global";
+import { ctx, viewport } from "../global";
 import { GridSegment } from "./GridSegment";
 
 export class BrickArea {
@@ -10,21 +10,26 @@ export class BrickArea {
     segmentsPerRow: number;
     draw: () => void;
 
-	constructor(x: number, y: number, w: number, h: number, renderGrid = false) {
+	public static instance: BrickArea = null;
+	public static render = () => {
+		BrickArea.instance.draw();
+	}
+
+	constructor(x: number, y: number, w: number, h: number) {
 		this.x = x;
 		this.y = y;
 		this.w = w;
 		this.h = h;
-		this.renderGrid = renderGrid;
-		this.segmentsPerRow = 5;// grid
+		this.segmentsPerRow = 5;
 
-		// generate grid
+		BrickArea.instance = this;
+
+		// generate grid segments
 		let offsetX = this.x;
 		let offsetY = this.y;
-		let col = 1;// "next line" -controller
+		let col = 1;
 		for (let i = 0; i < this.segmentsPerRow * this.segmentsPerRow; i++) {
-			// the object parameter contains width and height of THIS (= BrickArea).
-			game.gridSegments.push(new GridSegment(offsetX, offsetY, this.segmentsPerRow, i, {w: this.w, h: this.h}));
+			new GridSegment(offsetX, offsetY, this.segmentsPerRow, i);
 			offsetX += this.w / this.segmentsPerRow;
 			if (col === this.segmentsPerRow) {
 				offsetX = this.x;// initial value
@@ -36,9 +41,27 @@ export class BrickArea {
 
 		this.draw = () => {
 			ctx.save();
-			ctx.fillStyle = "rgba(0, 255, 0, 0.1)";
-			ctx.fillRect(game.brickArea.x, game.brickArea.y, game.brickArea.w, game.brickArea.h);
-			ctx.fill();
+				ctx.fillStyle = "rgba(0, 255, 0, 0.1)";
+				ctx.fillRect(this.x, this.y, this.w, this.h);
+				ctx.fill();
+			ctx.restore();
+
+			GridSegment.render();
+
+			// Ruler
+			ctx.save();
+			ctx.strokeStyle = 'darkred';
+			// vertical
+			ctx.beginPath();
+			ctx.moveTo(viewport.w / 2, 0);
+			ctx.lineTo(viewport.w / 2, viewport.h);
+			ctx.stroke();
+			// horizontal
+			ctx.beginPath();
+			ctx.moveTo(0, viewport.h / 2);
+			ctx.lineTo(viewport.w, viewport.h / 2);
+			ctx.stroke();
+
 			ctx.restore();
 		}
 	}

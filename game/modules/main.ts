@@ -6,6 +6,8 @@ import { PowerUpUI } from './classes/PowerUpUI';
 import { PlayerBoard } from './classes/PlayerBoard';
 import { Orb } from './classes/Orb';
 import { level_1 } from './level/level-1';
+import { PowerUp } from './classes/PowerUp';
+import { Brick } from './classes/Brick';
 
 // INIT GAME ============================================================
 document.addEventListener('DOMContentLoaded', () => init())
@@ -18,28 +20,24 @@ const init = () => {
 		if (e.keyCode === 32 && !game.running) {
 			game.running = true;
 		}
-		if (e.keyCode === 69 && game.running && game.equippedPowerUp) {// E
-			game.equippedPowerUp.activate();
+		if (e.keyCode === 69 && game.running && PowerUp.equipped) {// E
+			PowerUp.equipped.activate();
 		}
-		// let boardControl: any = {left: false, right: false};
+
 		if (e.keyCode === 68) {// D
-			game.boardControl.right = true;
-			game.boardControl.left = false;
+			PlayerBoard.controls.right = true;
+			PlayerBoard.controls.left = false;
 		}
 		if (e.keyCode === 65) {// A
-			game.boardControl.left = true;
-			game.boardControl.right = false;
+			PlayerBoard.controls.left = true;
+			PlayerBoard.controls.right = false;
 		}
 	});
 
 	document.addEventListener('keyup', e => {
-		if (e.keyCode === 68) game.boardControl.right = false;
-		if (e.keyCode === 65) game.boardControl.left = false;
+		if (e.keyCode === 65) PlayerBoard.controls.left = false;
+		if (e.keyCode === 68) PlayerBoard.controls.right = false;
 	});
-
-	// document.addEventListener('mousemove', e => {
-	//
-	// });
 
 	// canvas dimensions
 	canvas.width = viewport.w;
@@ -50,14 +48,17 @@ const init = () => {
 	game.misc.background.src = 'img/background.jpg';
 
 	// game-start text
-	game.misc.texts.startGame = new TextUI('Press [SPACE] to start', 'center', viewport.h / 1.15, '#fff', '40px Arial');
+	game.misc.texts.startGame = new TextUI('Press [SPACE] to start', 'center', viewport.h - 250, '#fff', '50px Arial');
+	game.misc.texts.moveLeft = new TextUI('<< A', 10, viewport.h - 10, '#fff', '40px Arial');
+	game.misc.texts.moveRight = new TextUI('D >>', viewport.w - 100, viewport.h - 10, '#fff', '40px Arial');
+	game.misc.texts.usePowerUp = new TextUI('E = PowerUp', 'center', viewport.h - 75, '#fff', '20px Arial');
 
 	// game setup
-	game.brickArea = new BrickArea(0, 45, viewport.w, viewport.h / 2, false);
-	game.UIs.statsUI = new StatsUI();
-	game.UIs.powerUpUI = new PowerUpUI();
-	game.playerBoard = new PlayerBoard();
-	game.orbs.push(new Orb(game.playerBoard.x, game.playerBoard.y - 10));
+	new BrickArea(0, 45, viewport.w, viewport.h / 2);
+	new StatsUI();
+	new PowerUpUI();
+	new PlayerBoard();
+	new Orb(PlayerBoard.instance.x, PlayerBoard.instance.y - 10);
 
 	level_1();
 
@@ -68,75 +69,24 @@ const gameLoop = () => {
 	// draw background image
 	ctx.drawImage(game.misc.background, 0, 0, viewport.w, viewport.h);
 
-	// refresh canvas
+	// clear canvas
 	ctx.fillStyle = 'rgba(22, 22, 24, 0.75)';
 	ctx.fillRect(0, 0, viewport.w, viewport.h);
 
-	// whether to render grid or not
-	if (game.brickArea.renderGrid) {
-		game.brickArea.draw();
-
-		let segments = game.gridSegments.length;
-		for (let i = 0; i < segments; i++) {
-			game.gridSegments[i].draw();
-		}
-
-		// ruler
-		ctx.strokeStyle = 'darkred';
-		ctx.beginPath();
-		ctx.moveTo(viewport.w / 2, 0);
-		ctx.lineTo(viewport.w / 2, viewport.h);
-		ctx.stroke();
-
-		ctx.beginPath();
-		ctx.moveTo(0, viewport.h / 2);
-		ctx.lineTo(viewport.w, viewport.h / 2);
-		ctx.stroke();
-	}
-
-	// player board movement
-	if (game.boardControl.left) game.playerBoard.moveLeft();
-	if (game.boardControl.right) game.playerBoard.moveRight();
-
 	// GAME COMPONENTS
-	game.UIs.statsUI.draw();
-	game.UIs.powerUpUI.draw();
-	game.playerBoard.draw();
+	// BrickArea.render();
+	StatsUI.render();
+	PowerUpUI.render();
+	Brick.render();
+	PowerUp.render();
+	PlayerBoard.render();
+	Orb.render();
 
 	// display 'game start' text while game is not running
 	if (!game.running) game.misc.texts.startGame.pulse();
-
-	// BRICKS
-	let bricks = game.bricks.length;
-	for (let i = 0; i < bricks; i++) {
-		if (!game.bricks[i].hidden) {
-			game.bricks[i].draw();
-		}
-	}
-
-	// POWERUPS
-	for (let i = 0; i < game.powerUps.length; i++) {
-		game.powerUps[i].collected();
-		if (!game.powerUps[i].hidden) {
-			game.powerUps[i].y += game.powerUps[i].vy;
-			game.powerUps[i].draw();
-		}
-	}
-
-	// ORBS
-	for (let i = 0; i < game.orbs.length; i++) {
-		if (game.running) {
-			game.orbs[i].isColliding();
-			game.orbs[i].x += game.orbs[i].vx;
-			game.orbs[i].y += game.orbs[i].vy;
-		} else {
-			// stick orb to player board until game is running
-			game.orbs[i].x = game.playerBoard.x;
-			game.orbs[i].y = game.playerBoard.y - 10;
-		}
-		game.orbs[i].draw();
-		game.orbs[i].drawTrail();
-	}
+	if (!game.running) game.misc.texts.moveLeft.draw();
+	if (!game.running) game.misc.texts.moveRight.draw();
+	if (!game.running) game.misc.texts.usePowerUp.draw();
 
 	requestAnimationFrame(() => {
 		gameLoop()

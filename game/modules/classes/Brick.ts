@@ -1,4 +1,4 @@
-import { game, ctx } from "../global";
+import { ctx } from "../global";
 import { MultiOrb } from "./PowerUp_MultiOrb";
 import { XXLBoard } from "./PowerUp_XXLBoard";
 import { GridSegment } from "./GridSegment";
@@ -14,6 +14,15 @@ export class Brick {
     dropPowerUp: () => void;
     draw: () => void;
 
+	public static instances: Brick[] = [];
+	public static render = () => {
+		for (let i = 0; i < Brick.instances.length; i++) {
+			if (!Brick.instances[i].hidden) {
+				Brick.instances[i].draw();
+			}
+		}
+	}
+
 	constructor(x: number, y: number) {
 		this.x = x;
 		this.y = y;
@@ -24,25 +33,21 @@ export class Brick {
 		this.texture = new Image(0, 0);
 		this.texture.src = 'img/brick.png';
 
-		let within = (segment: GridSegment) => {
-			if ((this.x + this.w) >= segment.x && this.x <= (segment.x + segment.w) && (this.y + this.h) >= segment.y && this.y <= (segment.y + segment.h)) {
-				return true;
-			}
-		}
+		Brick.instances.push(this);
 
-		// segment check
-		for (let i = 0; i < game.gridSegments.length; i++) {
-			if (within(game.gridSegments[i])) {
-				game.gridSegments[i].contains.push(this);
+		// segment assignment
+		for (let i = 0; i < GridSegment.instances.length; i++) {
+			let seg = GridSegment.instances[i];
+			if ((this.x + this.w) >= seg.x && this.x <= (seg.x + seg.w) && (this.y + this.h) >= seg.y && this.y <= (seg.y + seg.h)) {
+				GridSegment.instances[i].contains.push(this);
 			}
 		}
 
 		this.dropPowerUp = () => {
-			if (Math.round(Math.random() * 5) === 1 || true) {
+			if (Math.round(Math.random() * 5) === 1 || false) {
 				let num = Math.round(Math.random() * 2);
-				num = 0;
-				if (num === 0) game.powerUps.push(new XXLBoard(this.x, this.y));
-				if (num === 1) game.powerUps.push(new MultiOrb(this.x, this.y));
+				if (num === 0) new XXLBoard(this.x, this.y);
+				if (num === 1) new MultiOrb(this.x, this.y);
 			}
 		}
 
