@@ -30,7 +30,7 @@ export class PlayerBoard {
 		this.sticky = false;
 		this.fillColor = '#fff';
 		this.texture = new Image(0, 0);
-		// this.texture.src = 'img/paddle.png';
+		this.texture.src = 'img/paddle2.png';
 
 		PlayerBoard.instance = this;
 
@@ -49,14 +49,10 @@ export class PlayerBoard {
 			ctx.save();
 			ctx.fillStyle = this.fillColor;
 			ctx.shadowBlur = 10;
-			ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
-			ctx.fillRect(this.x - this.w / 2, this.y, this.w, this.h);
-			// ctx.drawImage(this.texture, this.x - this.w / 2, this.y, this.w, this.h);
-			ctx.fill();
+			ctx.shadowColor = "rgba(255, 255, 255, 0.1)";
+			ctx.drawImage(this.texture, this.x - this.w / 2, this.y, this.w, this.h);
 			ctx.restore();
 
-			// ctx.font = "14px Arial";
-			// ctx.fillText('x:'+this.x.toFixed(0)+' y:'+this.y.toFixed(0), this.x + this.w / 2 + 10, this.y);
 		}
 	}
 }

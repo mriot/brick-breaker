@@ -31,7 +31,7 @@ export class Orb {
 		this.vx = Math.floor(Math.random() * 5 + 3);
 		this.vy = 5;
 		this.radius = 6;
-		this.fillColor = 'cyan';
+		this.fillColor = 'rgb(0, 255, 255)';
 		this.maxTrailLength = 7;
 		this.trail = [];
 		// once constructed, push instance into array
@@ -118,6 +118,8 @@ export class Orb {
 				this.y = PlayerBoard.instance.y - 10;
 			}
 			ctx.fillStyle = this.fillColor;
+			ctx.shadowBlur = 10;
+			ctx.shadowColor = "rgba(0, 255, 255, 0.5)";
 			ctx.beginPath();
 			ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
 			ctx.fill();
