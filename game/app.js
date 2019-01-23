@@ -153,7 +153,7 @@ class Orb {
         this.vx = Math.floor(Math.random() * 5 + 3);
         this.vy = 5;
         this.radius = 6;
-        this.fillColor = 'cyan';
+        this.fillColor = 'rgb(0, 255, 255)';
         this.maxTrailLength = 7;
         this.trail = [];
         // once constructed, push instance into array
@@ -203,7 +203,7 @@ class Orb {
                 this.kill();
             } // bottom 'wall'
             // board collision
-            let distX = (this.x + this.radius) - (PlayerBoard_1.PlayerBoard.instance.x - PlayerBoard_1.PlayerBoard.instance.w / 2);
+            let distX = (this.x + this.radius) - (PlayerBoard_1.PlayerBoard.instance.x * PlayerBoard_1.PlayerBoard.instance.expand - PlayerBoard_1.PlayerBoard.instance.w / 2);
             let distY = (this.y + this.radius) - PlayerBoard_1.PlayerBoard.instance.y;
             if ((distX >= 0 && distX <= PlayerBoard_1.PlayerBoard.instance.w + this.radius * 2) && (distY >= 0 && distY <= PlayerBoard_1.PlayerBoard.instance.h + this.radius * 2)) {
                 if (PlayerBoard_1.PlayerBoard.instance.sticky) {
@@ -246,6 +246,8 @@ class Orb {
                 this.y = PlayerBoard_1.PlayerBoard.instance.y - 10;
             }
             global_1.ctx.fillStyle = this.fillColor;
+            global_1.ctx.shadowBlur = 10;
+            global_1.ctx.shadowColor = "rgba(0, 255, 255, 0.5)";
             global_1.ctx.beginPath();
             global_1.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
             global_1.ctx.fill();
@@ -276,7 +278,7 @@ class PlayerBoard {
         this.sticky = false;
         this.fillColor = '#fff';
         this.texture = new Image(0, 0);
-        // this.texture.src = 'img/paddle.png';
+        this.texture.src = 'img/paddle2.png';
         PlayerBoard.instance = this;
         this.moveLeft = () => {
             if (this.x - this.w / 2 > 0)
@@ -294,13 +296,9 @@ class PlayerBoard {
             global_1.ctx.save();
             global_1.ctx.fillStyle = this.fillColor;
             global_1.ctx.shadowBlur = 10;
-            global_1.ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
-            global_1.ctx.fillRect(this.x - this.w / 2, this.y, this.w, this.h);
-            // ctx.drawImage(this.texture, this.x - this.w / 2, this.y, this.w, this.h);
-            global_1.ctx.fill();
+            global_1.ctx.shadowColor = "rgba(255, 255, 255, 0.1)";
+            global_1.ctx.drawImage(this.texture, this.x - this.w / 2, this.y, this.w, this.h);
             global_1.ctx.restore();
-            // ctx.font = "14px Arial";
-            // ctx.fillText('x:'+this.x.toFixed(0)+' y:'+this.y.toFixed(0), this.x + this.w / 2 + 10, this.y);
         };
     }
 }
@@ -316,6 +314,7 @@ exports.PlayerBoard = PlayerBoard;
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
 const PlayerBoard_1 = require("./PlayerBoard");
+const PowerUpUI_1 = require("./PowerUpUI");
 class PowerUp {
     constructor(x, y, name, icon) {
         this.x = x;
@@ -340,6 +339,7 @@ class PowerUp {
             if ((this.x + this.w) >= PlayerBoard_1.PlayerBoard.instance.x - PlayerBoard_1.PlayerBoard.instance.w / 2 && this.x <= (PlayerBoard_1.PlayerBoard.instance.x + PlayerBoard_1.PlayerBoard.instance.w / 2) && (this.y + this.h) >= PlayerBoard_1.PlayerBoard.instance.y && this.y <= (PlayerBoard_1.PlayerBoard.instance.y + PlayerBoard_1.PlayerBoard.instance.h)) {
                 console.log('power up ' + name + ' equipped!');
                 PowerUp.equipped = this;
+                PowerUpUI_1.PowerUpUI.instance.icon = this.icon;
                 return true;
             }
         };
@@ -368,10 +368,11 @@ PowerUp.render = () => {
 };
 exports.PowerUp = PowerUp;
 
-},{"../global":12,"./PlayerBoard":5}],7:[function(require,module,exports){
+},{"../global":12,"./PlayerBoard":5,"./PowerUpUI":7}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
+const PowerUp_1 = require("./PowerUp");
 class PowerUpUI {
     constructor() {
         this.x = global_1.viewport.w - 40;
@@ -380,6 +381,7 @@ class PowerUpUI {
         this.h = 5;
         this.powerUpLifetime = 0;
         this.initLifetime = 0;
+        this.icon = new Image(0, 0);
         PowerUpUI.instance = this;
         this.timer = lifetime => {
             this.powerUpLifetime = this.initLifetime = lifetime;
@@ -387,18 +389,21 @@ class PowerUpUI {
                 this.powerUpLifetime -= 0.05;
                 if (this.powerUpLifetime <= 0)
                     clearInterval(timer);
-            }, 50);
+            }, 1000 / 60);
         };
         this.draw = () => {
+            global_1.ctx.save();
+            if (PowerUp_1.PowerUp.equipped) {
+                global_1.ctx.drawImage(this.icon, 0, global_1.viewport.h - this.icon.naturalHeight);
+            }
             if (this.powerUpLifetime > 0) {
                 let fill = this.w / this.initLifetime * this.powerUpLifetime;
-                global_1.ctx.save();
                 global_1.ctx.shadowBlur = 15;
                 global_1.ctx.shadowColor = '#000';
                 global_1.ctx.fillStyle = 'darkred';
                 global_1.ctx.fillRect(global_1.viewport.w / 2 - fill / 2, global_1.viewport.h - this.h, fill, this.h);
-                global_1.ctx.restore();
             }
+            global_1.ctx.restore();
         };
     }
 }
@@ -408,7 +413,7 @@ PowerUpUI.render = () => {
 };
 exports.PowerUpUI = PowerUpUI;
 
-},{"../global":12}],8:[function(require,module,exports){
+},{"../global":12,"./PowerUp":6}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Orb_1 = require("./Orb");
@@ -442,7 +447,6 @@ class XXLBoard extends PowerUp_1.PowerUp {
                 PowerUp_1.PowerUp.active = PowerUp_1.PowerUp.equipped;
                 PowerUp_1.PowerUp.equipped = null;
                 PowerUpUI_1.PowerUpUI.instance.timer(this.lifetime);
-                // game.UIs.powerUpUI.icon(this.icon);
                 setTimeout(() => {
                     PlayerBoard_1.PlayerBoard.instance.w /= 2;
                     PowerUp_1.PowerUp.active = null;
@@ -466,7 +470,7 @@ class StatsUI {
         this.draw = () => {
             global_1.ctx.save();
             global_1.ctx.fillStyle = '#aaa';
-            global_1.ctx.font = "16px Arial";
+            global_1.ctx.font = "16px Impact";
             global_1.ctx.fillText(`Level ${this.level}`, 10, this.h - 5);
             // container
             global_1.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
@@ -591,14 +595,17 @@ const init = () => {
         if (e.keyCode === 32 && !global_1.game.running) {
             global_1.game.running = true;
         }
-        if (e.keyCode === 69 && global_1.game.running && PowerUp_1.PowerUp.equipped) { // E
+        // E
+        if (e.keyCode === 69 && global_1.game.running && PowerUp_1.PowerUp.equipped) {
             PowerUp_1.PowerUp.equipped.activate();
         }
-        if (e.keyCode === 68) { // D
+        // D
+        if (e.keyCode === 68) {
             PlayerBoard_1.PlayerBoard.controls.right = true;
             PlayerBoard_1.PlayerBoard.controls.left = false;
         }
-        if (e.keyCode === 65) { // A
+        // A
+        if (e.keyCode === 65) {
             PlayerBoard_1.PlayerBoard.controls.left = true;
             PlayerBoard_1.PlayerBoard.controls.right = false;
         }
@@ -614,12 +621,12 @@ const init = () => {
     global_1.canvas.height = global_1.viewport.h;
     // background image
     global_1.game.misc.background = new Image(0, 0);
-    global_1.game.misc.background.src = 'img/background.jpg';
+    global_1.game.misc.background.src = 'img/background.png';
     // game-start text
-    global_1.game.misc.texts.startGame = new TextUI_1.TextUI('Press [SPACE] to start', 'center', global_1.viewport.h - 250, '#fff', '50px Arial');
-    global_1.game.misc.texts.moveLeft = new TextUI_1.TextUI('<< A', 10, global_1.viewport.h - 10, '#fff', '40px Arial');
-    global_1.game.misc.texts.moveRight = new TextUI_1.TextUI('D >>', global_1.viewport.w - 100, global_1.viewport.h - 10, '#fff', '40px Arial');
-    global_1.game.misc.texts.usePowerUp = new TextUI_1.TextUI('E = PowerUp', 'center', global_1.viewport.h - 75, '#fff', '20px Arial');
+    global_1.game.misc.texts.startGame = new TextUI_1.TextUI('Press [SPACE] to start', 'center', global_1.viewport.h - 200, '#fff', '60px Impact');
+    global_1.game.misc.texts.moveLeft = new TextUI_1.TextUI('<< A', global_1.viewport.w / 2 - 200, global_1.viewport.h - 35, '#fff', '40px Impact');
+    global_1.game.misc.texts.moveRight = new TextUI_1.TextUI('D >>', global_1.viewport.w / 2 + 125, global_1.viewport.h - 35, '#fff', '40px Impact');
+    global_1.game.misc.texts.usePowerUp = new TextUI_1.TextUI('E = PowerUp', 'center', global_1.viewport.h - 75, '#fff', '20px Impact');
     // game setup
     new BrickArea_1.BrickArea(0, 45, global_1.viewport.w, global_1.viewport.h / 2);
     new StatsUI_1.StatsUI();
@@ -635,14 +642,6 @@ const gameLoop = () => {
     // clear canvas
     global_1.ctx.fillStyle = 'rgba(22, 22, 24, 0.75)';
     global_1.ctx.fillRect(0, 0, global_1.viewport.w, global_1.viewport.h);
-    // GAME COMPONENTS
-    // BrickArea.render();
-    StatsUI_1.StatsUI.render();
-    PowerUpUI_1.PowerUpUI.render();
-    Brick_1.Brick.render();
-    PowerUp_1.PowerUp.render();
-    PlayerBoard_1.PlayerBoard.render();
-    Orb_1.Orb.render();
     // display 'game start' text while game is not running
     if (!global_1.game.running)
         global_1.game.misc.texts.startGame.pulse();
@@ -652,6 +651,14 @@ const gameLoop = () => {
         global_1.game.misc.texts.moveRight.draw();
     if (!global_1.game.running)
         global_1.game.misc.texts.usePowerUp.draw();
+    // GAME COMPONENTS
+    // BrickArea.render();
+    StatsUI_1.StatsUI.render();
+    PowerUpUI_1.PowerUpUI.render();
+    Brick_1.Brick.render();
+    PowerUp_1.PowerUp.render();
+    PlayerBoard_1.PlayerBoard.render();
+    Orb_1.Orb.render();
     requestAnimationFrame(() => {
         gameLoop();
     });
