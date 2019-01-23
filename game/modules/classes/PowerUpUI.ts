@@ -1,4 +1,5 @@
 import { viewport, ctx } from "../global";
+import { PowerUp } from "./PowerUp";
 
 export class PowerUpUI {
     x: number;
@@ -7,6 +8,7 @@ export class PowerUpUI {
     h: number;
     powerUpLifetime: number;
     initLifetime: number;
+	icon: HTMLImageElement;
     timer: (lifetime: any) => void;
 	draw: () => void;
 
@@ -22,6 +24,7 @@ export class PowerUpUI {
 		this.h = 5;
 		this.powerUpLifetime = 0;
 		this.initLifetime = 0;
+		this.icon = new Image(0, 0);
 
 		PowerUpUI.instance = this;
 
@@ -30,19 +33,22 @@ export class PowerUpUI {
 			let timer = setInterval(() => {
 				this.powerUpLifetime -= 0.05;
 				if (this.powerUpLifetime <= 0) clearInterval(timer);
-			}, 50);
+			}, 1000/60);
 		}
 
 		this.draw = () => {
+			ctx.save();
+			if (PowerUp.equipped) {
+				ctx.drawImage(this.icon, 0, viewport.h - this.icon.naturalHeight);
+			}
 			if (this.powerUpLifetime > 0) {
 				let fill = this.w / this.initLifetime * this.powerUpLifetime;
-				ctx.save();
 				ctx.shadowBlur = 15;
 				ctx.shadowColor = '#000';
 				ctx.fillStyle = 'darkred';
 				ctx.fillRect(viewport.w / 2 - fill / 2, viewport.h - this.h, fill, this.h);
-				ctx.restore();
 			}
+			ctx.restore();
 		}
 	}
 }

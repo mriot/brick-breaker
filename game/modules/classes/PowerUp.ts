@@ -1,5 +1,6 @@
-import { game, ctx, viewport } from "../global";
+import { ctx, viewport } from "../global";
 import { PlayerBoard } from "./PlayerBoard";
+import { PowerUpUI } from "./PowerUpUI";
 
 export class PowerUp {
     x: number;
@@ -50,6 +51,7 @@ export class PowerUp {
 			if ((this.x + this.w) >= PlayerBoard.instance.x - PlayerBoard.instance.w / 2 && this.x <= (PlayerBoard.instance.x + PlayerBoard.instance.w / 2) && (this.y + this.h) >= PlayerBoard.instance.y && this.y <= (PlayerBoard.instance.y + PlayerBoard.instance.h)) {
 				console.log('power up ' + name + ' equipped!');
 				PowerUp.equipped = this;
+				PowerUpUI.instance.icon = this.icon;
 				return true;
 			}
 		}

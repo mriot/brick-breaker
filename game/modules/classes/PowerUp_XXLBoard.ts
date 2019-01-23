@@ -1,4 +1,3 @@
-import { game } from "../global";
 import { PowerUp } from "./PowerUp";
 import { PowerUpUI } from "./PowerUpUI";
 import { PlayerBoard } from "./PlayerBoard";
@@ -17,9 +16,7 @@ export class XXLBoard extends PowerUp {
 
 				PowerUp.active = PowerUp.equipped;
 				PowerUp.equipped = null;
-
 				PowerUpUI.instance.timer(this.lifetime);
-				// game.UIs.powerUpUI.icon(this.icon);
 
 				setTimeout(() => {
 					PlayerBoard.instance.w /= 2;
