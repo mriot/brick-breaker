@@ -21,7 +21,7 @@ export class StatsUI {
 		this.draw = () => {
 			ctx.save();
 			ctx.fillStyle = '#aaa';
-			ctx.font = "16px Arial";
+			ctx.font = "16px Impact";
 			ctx.fillText(`Level ${this.level}`, 10, this.h - 5);
 
 			// container

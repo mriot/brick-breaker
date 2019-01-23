@@ -203,7 +203,7 @@ class Orb {
                 this.kill();
             } // bottom 'wall'
             // board collision
-            let distX = (this.x + this.radius) - (PlayerBoard_1.PlayerBoard.instance.x * PlayerBoard_1.PlayerBoard.instance.expand - PlayerBoard_1.PlayerBoard.instance.w / 2);
+            let distX = (this.x + this.radius) - (PlayerBoard_1.PlayerBoard.instance.x - PlayerBoard_1.PlayerBoard.instance.w / 2);
             let distY = (this.y + this.radius) - PlayerBoard_1.PlayerBoard.instance.y;
             if ((distX >= 0 && distX <= PlayerBoard_1.PlayerBoard.instance.w + this.radius * 2) && (distY >= 0 && distY <= PlayerBoard_1.PlayerBoard.instance.h + this.radius * 2)) {
                 if (PlayerBoard_1.PlayerBoard.instance.sticky) {
