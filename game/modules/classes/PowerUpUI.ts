@@ -9,7 +9,7 @@ export class PowerUpUI {
     powerUpLifetime: number;
     initLifetime: number;
 	icon: HTMLImageElement;
-    timer: (lifetime: any) => void;
+    timer: (lifetime: number) => void;
 	draw: () => void;
 
 	public static instance: PowerUpUI = null;
@@ -31,9 +31,9 @@ export class PowerUpUI {
 		this.timer = lifetime => {
 			this.powerUpLifetime = this.initLifetime = lifetime;
 			let timer = setInterval(() => {
-				this.powerUpLifetime -= 0.05;
+				this.powerUpLifetime -= 0.15;
 				if (this.powerUpLifetime <= 0) clearInterval(timer);
-			}, 1000/60);
+			}, 100);
 		}
 
 		this.draw = () => {
