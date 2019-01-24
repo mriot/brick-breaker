@@ -53,7 +53,7 @@ const init = () => {
 	game.misc.texts.startGame = new TextUI('Press [SPACE] to start', 'center', viewport.h - 200, '#fff', '60px Impact');
 	game.misc.texts.moveLeft = new TextUI('<< A', viewport.w / 2 - 200, viewport.h - 35, '#fff', '40px Impact');
 	game.misc.texts.moveRight = new TextUI('D >>', viewport.w / 2 + 125, viewport.h - 35, '#fff', '40px Impact');
-	game.misc.texts.usePowerUp = new TextUI('E = PowerUp', 'center', viewport.h - 75, '#fff', '20px Impact');
+	game.misc.texts.usePowerUp = new TextUI('E = PowerUp', 'center', viewport.h - 75, '#fff', '30px Impact');
 	
 	// game setup
 	new BrickArea(0, 45, viewport.w, viewport.h / 2);
@@ -80,15 +80,20 @@ const gameLoop = () => {
 	if (!game.running) game.misc.texts.moveLeft.draw();
 	if (!game.running) game.misc.texts.moveRight.draw();
 	if (!game.running) game.misc.texts.usePowerUp.draw();
-
+	
 	// GAME COMPONENTS
-	// BrickArea.render();
+	BrickArea.render();
 	StatsUI.render();
 	PowerUpUI.render();
 	Brick.render();
 	PowerUp.render();
 	PlayerBoard.render();
 	Orb.render();
+
+	if (game.misc.texts.calcs) game.misc.texts.calcs.draw();
+	
+	if (game.over) game.misc.texts.gameover.pulse();
+
 
 	requestAnimationFrame(() => {
 		gameLoop()
