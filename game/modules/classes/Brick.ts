@@ -10,7 +10,7 @@ export class Brick {
     h: number;
     hidden: boolean;
     hitsRequired: number;
-    texture: HTMLImageElement;
+	texture: HTMLImageElement;
     dropPowerUp: () => void;
     draw: () => void;
 
@@ -38,7 +38,7 @@ export class Brick {
 		// segment assignment
 		for (let i = 0; i < GridSegment.instances.length; i++) {
 			let seg = GridSegment.instances[i];
-			if ((this.x + this.w) >= seg.x && this.x <= (seg.x + seg.w) && (this.y + this.h) >= seg.y && this.y <= (seg.y + seg.h)) {
+			if (this.x + this.w >= seg.x && this.x <= seg.x + seg.w && this.y + this.h >= seg.y && this.y <= seg.y + seg.h) {
 				GridSegment.instances[i].contains.push(this);
 			}
 		}
@@ -54,7 +54,6 @@ export class Brick {
 		this.draw = () => {
 			ctx.save();
 			ctx.drawImage(this.texture, this.x, this.y, this.w, this.h);
-			ctx.fill();
 			ctx.restore();
 		}
 	}
