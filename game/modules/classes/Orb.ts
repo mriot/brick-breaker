@@ -2,6 +2,7 @@ import { game, viewport, ctx } from "../global";
 import { PlayerBoard } from "./PlayerBoard";
 import { BrickArea } from "./BrickArea";
 import { GridSegment } from "./GridSegment";
+import { TextUI } from "./TextUI";
 
 export class Orb {
     x: number;
@@ -26,10 +27,16 @@ export class Orb {
 	}
 
 	constructor(x: number, y: number) {
-		this.x = x;
-		this.y = y;
-		this.vx = Math.floor(Math.random() * 5 + 3);
-		this.vy = 5;
+		// this.x = x;
+		// this.y = y;
+		document.addEventListener('mousemove', e => {
+			this.x = e.pageX;
+			this.y = e.pageY;
+		})
+		this.vx = 0;
+		this.vy = 0;
+		// this.vx = Math.floor(Math.random() * 5 + 3);
+		// this.vy = 5;
 		this.radius = 6;
 		this.fillColor = 'rgb(0, 255, 255)';
 		this.maxTrailLength = 7;
@@ -44,29 +51,39 @@ export class Orb {
 					Orb.instances.splice(i, 1);
 				}
 			}
+
 			if (Orb.instances.length === 0) {
-				console.log("GAME OVER");
+				game.over = true;
+				game.misc.texts.gameover = new TextUI('GAME OVER', 'center', viewport.h / 2 + 50, '#fff', '100px Impact', true);
 			}
 		}
 
-		this.hits = (obj) => {
-			return (this.x + this.radius) >= obj.x && this.x + this.radius <= (obj.x + obj.w + this.radius * 2) && (this.y + this.radius) >= obj.y && this.y + this.radius <= (obj.y + obj.h + this.radius * 2);
+		this.hits = obj => {
+			// this.y + this.radius >= obj.y | top
+			// this.y - this.radius <= obj.y + obj.h | bottom
+			// this.x + this.radius >= obj.x | left
+			// this.x - this.radius <= obj.x + obj.w | right
+			// return (this.x + this.radius) >= obj.x && this.x - this.radius <= (obj.x + obj.w) && (this.y + this.radius) >= obj.y && this.y + this.radius <= (obj.y + obj.h + this.radius * 2);
+			return this.y + this.radius >= obj.y && this.y - this.radius <= obj.y + obj.h && this.x + this.radius >= obj.x && this.x - this.radius <= obj.x + obj.w;
 		}
 
 		this.isColliding = () => {
 			let segments = GridSegment.instances;
 			for (let i = 0; i < segments.length; i++) {
 				if (this.hits(segments[i])) {
+					game.misc.texts.calcs = new TextUI(segments[i].contains.length + "", this.x, this.y - this.radius * 2, '#fff', '20px Arial');
 					for (let j = 0; j < segments[i].contains.length; j++) {
 						let brick = segments[i].contains[j];
-						if (!brick.hidden && this.hits(brick)) {
+						if (this.hits(brick)) {
+							this.vy *= -1;
 							brick.hidden = true;
 							brick.dropPowerUp();
-							this.vy *= -1;
+							segments[i].contains.splice(j, 1);
 						}
 					}
 				}
 			}
+			
 
 			// wall collision
 			if (this.y - this.radius < BrickArea.instance.y) {this.vy *= -1; this.y = BrickArea.instance.y + this.radius}// top wall
