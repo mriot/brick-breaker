@@ -19,7 +19,7 @@ export const level_1 = () => {
 		rowCount++;
 	}
 
-	createRow(20);
+	createRow(17);
 	createRow(10);
 	createRow(15);
 	createRow(2);

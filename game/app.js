@@ -19,7 +19,7 @@ class Brick {
         // segment assignment
         for (let i = 0; i < GridSegment_1.GridSegment.instances.length; i++) {
             let seg = GridSegment_1.GridSegment.instances[i];
-            if ((this.x + this.w) >= seg.x && this.x <= (seg.x + seg.w) && (this.y + this.h) >= seg.y && this.y <= (seg.y + seg.h)) {
+            if (this.x + this.w >= seg.x && this.x <= seg.x + seg.w && this.y + this.h >= seg.y && this.y <= seg.y + seg.h) {
                 GridSegment_1.GridSegment.instances[i].contains.push(this);
             }
         }
@@ -35,7 +35,6 @@ class Brick {
         this.draw = () => {
             global_1.ctx.save();
             global_1.ctx.drawImage(this.texture, this.x, this.y, this.w, this.h);
-            global_1.ctx.fill();
             global_1.ctx.restore();
         };
     }
@@ -146,12 +145,19 @@ const global_1 = require("../global");
 const PlayerBoard_1 = require("./PlayerBoard");
 const BrickArea_1 = require("./BrickArea");
 const GridSegment_1 = require("./GridSegment");
+const TextUI_1 = require("./TextUI");
 class Orb {
     constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.vx = Math.floor(Math.random() * 5 + 3);
-        this.vy = 5;
+        // this.x = x;
+        // this.y = y;
+        document.addEventListener('mousemove', e => {
+            this.x = e.pageX;
+            this.y = e.pageY;
+        });
+        this.vx = 0;
+        this.vy = 0;
+        // this.vx = Math.floor(Math.random() * 5 + 3);
+        // this.vy = 5;
         this.radius = 6;
         this.fillColor = 'rgb(0, 255, 255)';
         this.maxTrailLength = 7;
@@ -166,22 +172,30 @@ class Orb {
                 }
             }
             if (Orb.instances.length === 0) {
-                console.log("GAME OVER");
+                global_1.game.over = true;
+                global_1.game.misc.texts.gameover = new TextUI_1.TextUI('GAME OVER', 'center', global_1.viewport.h / 2 + 50, '#fff', '100px Impact', true);
             }
         };
-        this.hits = (obj) => {
-            return (this.x + this.radius) >= obj.x && this.x + this.radius <= (obj.x + obj.w + this.radius * 2) && (this.y + this.radius) >= obj.y && this.y + this.radius <= (obj.y + obj.h + this.radius * 2);
+        this.hits = obj => {
+            // this.y + this.radius >= obj.y | top
+            // this.y - this.radius <= obj.y + obj.h | bottom
+            // this.x + this.radius >= obj.x | left
+            // this.x - this.radius <= obj.x + obj.w | right
+            // return (this.x + this.radius) >= obj.x && this.x - this.radius <= (obj.x + obj.w) && (this.y + this.radius) >= obj.y && this.y + this.radius <= (obj.y + obj.h + this.radius * 2);
+            return this.y + this.radius >= obj.y && this.y - this.radius <= obj.y + obj.h && this.x + this.radius >= obj.x && this.x - this.radius <= obj.x + obj.w;
         };
         this.isColliding = () => {
             let segments = GridSegment_1.GridSegment.instances;
             for (let i = 0; i < segments.length; i++) {
                 if (this.hits(segments[i])) {
+                    global_1.game.misc.texts.calcs = new TextUI_1.TextUI(segments[i].contains.length + "", this.x, this.y - this.radius * 2, '#fff', '20px Arial');
                     for (let j = 0; j < segments[i].contains.length; j++) {
                         let brick = segments[i].contains[j];
-                        if (!brick.hidden && this.hits(brick)) {
+                        if (this.hits(brick)) {
+                            this.vy *= -1;
                             brick.hidden = true;
                             brick.dropPowerUp();
-                            this.vy *= -1;
+                            segments[i].contains.splice(j, 1);
                         }
                     }
                 }
@@ -263,7 +277,7 @@ Orb.render = () => {
 };
 exports.Orb = Orb;
 
-},{"../global":12,"./BrickArea":2,"./GridSegment":3,"./PlayerBoard":5}],5:[function(require,module,exports){
+},{"../global":12,"./BrickArea":2,"./GridSegment":3,"./PlayerBoard":5,"./TextUI":11}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -386,10 +400,10 @@ class PowerUpUI {
         this.timer = lifetime => {
             this.powerUpLifetime = this.initLifetime = lifetime;
             let timer = setInterval(() => {
-                this.powerUpLifetime -= 0.05;
+                this.powerUpLifetime -= 0.15;
                 if (this.powerUpLifetime <= 0)
                     clearInterval(timer);
-            }, 1000 / 60);
+            }, 100);
         };
         this.draw = () => {
             global_1.ctx.save();
@@ -490,13 +504,14 @@ exports.StatsUI = StatsUI;
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
 class TextUI {
-    constructor(text, x, y, color = '#fff', font = '16px Arial') {
+    constructor(text, x, y, color = '#fff', font = '16px Arial', backdrop = false) {
         this.text = text;
         this.x = x;
         this.y = y;
         this.font = font;
         this.fillStyle = color;
         this.pulseInc = false;
+        this.backdrop = backdrop;
         this.alpha = 1;
         this.pulse = () => {
             if (this.pulseInc) {
@@ -514,6 +529,10 @@ class TextUI {
         this.draw = () => {
             global_1.ctx.save();
             global_1.ctx.font = this.font;
+            if (this.backdrop) {
+                global_1.ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+                global_1.ctx.fillRect(0, 0, global_1.viewport.w, global_1.viewport.h);
+            }
             global_1.ctx.globalAlpha = this.alpha;
             global_1.ctx.fillStyle = this.fillStyle;
             if (this.x == 'center')
@@ -532,7 +551,10 @@ exports.TextUI = TextUI;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.canvas = document.querySelector('#canvas');
 exports.ctx = exports.canvas.getContext('2d');
-exports.viewport = { w: window.innerWidth, h: window.innerHeight };
+exports.viewport = {
+    w: window.innerWidth < 1000 ? 1000 : window.innerWidth,
+    h: window.innerHeight < 600 ? 600 : window.innerHeight,
+};
 exports.game = {
     running: false,
     misc: {
@@ -563,7 +585,7 @@ exports.level_1 = () => {
         }
         rowCount++;
     };
-    createRow(20);
+    createRow(17);
     createRow(10);
     createRow(15);
     createRow(2);
@@ -626,7 +648,7 @@ const init = () => {
     global_1.game.misc.texts.startGame = new TextUI_1.TextUI('Press [SPACE] to start', 'center', global_1.viewport.h - 200, '#fff', '60px Impact');
     global_1.game.misc.texts.moveLeft = new TextUI_1.TextUI('<< A', global_1.viewport.w / 2 - 200, global_1.viewport.h - 35, '#fff', '40px Impact');
     global_1.game.misc.texts.moveRight = new TextUI_1.TextUI('D >>', global_1.viewport.w / 2 + 125, global_1.viewport.h - 35, '#fff', '40px Impact');
-    global_1.game.misc.texts.usePowerUp = new TextUI_1.TextUI('E = PowerUp', 'center', global_1.viewport.h - 75, '#fff', '20px Impact');
+    global_1.game.misc.texts.usePowerUp = new TextUI_1.TextUI('E = PowerUp', 'center', global_1.viewport.h - 75, '#fff', '30px Impact');
     // game setup
     new BrickArea_1.BrickArea(0, 45, global_1.viewport.w, global_1.viewport.h / 2);
     new StatsUI_1.StatsUI();
@@ -652,13 +674,17 @@ const gameLoop = () => {
     if (!global_1.game.running)
         global_1.game.misc.texts.usePowerUp.draw();
     // GAME COMPONENTS
-    // BrickArea.render();
+    BrickArea_1.BrickArea.render();
     StatsUI_1.StatsUI.render();
     PowerUpUI_1.PowerUpUI.render();
     Brick_1.Brick.render();
     PowerUp_1.PowerUp.render();
     PlayerBoard_1.PlayerBoard.render();
     Orb_1.Orb.render();
+    if (global_1.game.misc.texts.calcs)
+        global_1.game.misc.texts.calcs.draw();
+    if (global_1.game.over)
+        global_1.game.misc.texts.gameover.pulse();
     requestAnimationFrame(() => {
         gameLoop();
     });
