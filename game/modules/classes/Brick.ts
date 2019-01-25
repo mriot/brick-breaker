@@ -2,6 +2,7 @@ import { ctx } from "../global";
 import { MultiOrb } from "./PowerUp_MultiOrb";
 import { XXLBoard } from "./PowerUp_XXLBoard";
 import { GridSegment } from "./GridSegment";
+import { FX } from "./FX";
 
 export class Brick {
     x: number;
@@ -13,6 +14,7 @@ export class Brick {
 	texture: HTMLImageElement;
     dropPowerUp: () => void;
     draw: () => void;
+	poof: () => void;
 
 	public static instances: Brick[] = [];
 	public static render = () => {
@@ -49,6 +51,11 @@ export class Brick {
 				if (num === 0) new XXLBoard(this.x, this.y);
 				if (num === 1) new MultiOrb(this.x, this.y);
 			}
+		}
+
+		this.poof = () => {
+			new FX('poof', this.x, this.y);
+			this.hidden = true;
 		}
 
 		this.draw = () => {
