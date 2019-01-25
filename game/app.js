@@ -5,6 +5,7 @@ const global_1 = require("../global");
 const PowerUp_MultiOrb_1 = require("./PowerUp_MultiOrb");
 const PowerUp_XXLBoard_1 = require("./PowerUp_XXLBoard");
 const GridSegment_1 = require("./GridSegment");
+const FX_1 = require("./FX");
 class Brick {
     constructor(x, y) {
         this.x = x;
@@ -32,6 +33,10 @@ class Brick {
                     new PowerUp_MultiOrb_1.MultiOrb(this.x, this.y);
             }
         };
+        this.poof = () => {
+            new FX_1.FX('poof', this.x, this.y);
+            this.hidden = true;
+        };
         this.draw = () => {
             global_1.ctx.save();
             global_1.ctx.drawImage(this.texture, this.x, this.y, this.w, this.h);
@@ -49,7 +54,7 @@ Brick.render = () => {
 };
 exports.Brick = Brick;
 
-},{"../global":12,"./GridSegment":3,"./PowerUp_MultiOrb":8,"./PowerUp_XXLBoard":9}],2:[function(require,module,exports){
+},{"../global":14,"./FX":3,"./GridSegment":4,"./PowerUp_MultiOrb":10,"./PowerUp_XXLBoard":11}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -106,7 +111,50 @@ BrickArea.render = () => {
 };
 exports.BrickArea = BrickArea;
 
-},{"../global":12,"./GridSegment":3}],3:[function(require,module,exports){
+},{"../global":14,"./GridSegment":4}],3:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const global_1 = require("../global");
+class FX {
+    constructor(effect, x, y) {
+        let fxType = {
+            'poof': {
+                src: 'img/blackSmoke11.png',
+                lifespan: 500,
+            }
+        };
+        this.x = x;
+        this.y = x;
+        this.effect = fxType[effect];
+        this.img = new Image(0, 0);
+        this.img.src = this.effect.src;
+        this.dead = false;
+        this.drawn = 0;
+        FX.instances.push(this);
+        this.draw = () => {
+            global_1.ctx.save();
+            global_1.ctx.drawImage(this.img, this.x, this.y, 100, 100);
+            global_1.ctx.restore();
+            this.drawn++;
+            if (this.drawn >= 60 / (1000 / this.effect.lifespan))
+                this.dead = true;
+        };
+    }
+}
+FX.instances = [];
+FX.render = () => {
+    for (let i = 0; i < FX.instances.length; i++) {
+        if (FX.instances[i].dead) {
+            FX.instances.splice(i, 1);
+        }
+        else {
+            FX.instances[i].draw();
+        }
+    }
+};
+exports.FX = FX;
+
+},{"../global":14}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -138,7 +186,7 @@ GridSegment.render = () => {
 };
 exports.GridSegment = GridSegment;
 
-},{"../global":12,"./BrickArea":2}],4:[function(require,module,exports){
+},{"../global":14,"./BrickArea":2}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -148,19 +196,13 @@ const GridSegment_1 = require("./GridSegment");
 const TextUI_1 = require("./TextUI");
 class Orb {
     constructor(x, y) {
-        // this.x = x;
-        // this.y = y;
-        document.addEventListener('mousemove', e => {
-            this.x = e.pageX;
-            this.y = e.pageY;
-        });
-        this.vx = 0;
-        this.vy = 0;
-        // this.vx = Math.floor(Math.random() * 5 + 3);
-        // this.vy = 5;
+        this.x = x;
+        this.y = y;
+        this.vx = Math.floor(Math.random() * 5 + 3);
+        this.vy = 5;
         this.radius = 6;
         this.fillColor = 'rgb(0, 255, 255)';
-        this.maxTrailLength = 7;
+        this.trailLength = 7;
         this.trail = [];
         // once constructed, push instance into array
         Orb.instances.push(this);
@@ -177,11 +219,6 @@ class Orb {
             }
         };
         this.hits = obj => {
-            // this.y + this.radius >= obj.y | top
-            // this.y - this.radius <= obj.y + obj.h | bottom
-            // this.x + this.radius >= obj.x | left
-            // this.x - this.radius <= obj.x + obj.w | right
-            // return (this.x + this.radius) >= obj.x && this.x - this.radius <= (obj.x + obj.w) && (this.y + this.radius) >= obj.y && this.y + this.radius <= (obj.y + obj.h + this.radius * 2);
             return this.y + this.radius >= obj.y && this.y - this.radius <= obj.y + obj.h && this.x + this.radius >= obj.x && this.x - this.radius <= obj.x + obj.w;
         };
         this.isColliding = () => {
@@ -193,7 +230,8 @@ class Orb {
                         let brick = segments[i].contains[j];
                         if (this.hits(brick)) {
                             this.vy *= -1;
-                            brick.hidden = true;
+                            brick.poof();
+                            // brick.hidden = true;
                             brick.dropPowerUp();
                             segments[i].contains.splice(j, 1);
                         }
@@ -232,7 +270,7 @@ class Orb {
         this.drawTrail = () => {
             global_1.ctx.save();
             this.trail.push({ x: this.x, y: this.y });
-            if (this.trail.length > this.maxTrailLength)
+            if (this.trail.length > this.trailLength)
                 this.trail.shift();
             let radius = this.radius - 2;
             let opacity = 0.1;
@@ -277,7 +315,26 @@ Orb.render = () => {
 };
 exports.Orb = Orb;
 
-},{"../global":12,"./BrickArea":2,"./GridSegment":3,"./PlayerBoard":5,"./TextUI":11}],5:[function(require,module,exports){
+},{"../global":14,"./BrickArea":2,"./GridSegment":4,"./PlayerBoard":7,"./TextUI":13}],6:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const Orb_1 = require("./Orb");
+class DevOrb extends Orb_1.Orb {
+    constructor() {
+        super(0, 0);
+        this.vx = 0;
+        this.vy = 0;
+        this.fillColor = 'red';
+        Orb_1.Orb.instances.push(this);
+        document.addEventListener('mousemove', e => {
+            this.x = e.pageX;
+            this.y = e.pageY;
+        });
+    }
+}
+exports.DevOrb = DevOrb;
+
+},{"./Orb":5}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -323,7 +380,7 @@ PlayerBoard.render = () => {
 };
 exports.PlayerBoard = PlayerBoard;
 
-},{"../global":12}],6:[function(require,module,exports){
+},{"../global":14}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -382,7 +439,7 @@ PowerUp.render = () => {
 };
 exports.PowerUp = PowerUp;
 
-},{"../global":12,"./PlayerBoard":5,"./PowerUpUI":7}],7:[function(require,module,exports){
+},{"../global":14,"./PlayerBoard":7,"./PowerUpUI":9}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -427,7 +484,7 @@ PowerUpUI.render = () => {
 };
 exports.PowerUpUI = PowerUpUI;
 
-},{"../global":12,"./PowerUp":6}],8:[function(require,module,exports){
+},{"../global":14,"./PowerUp":8}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Orb_1 = require("./Orb");
@@ -445,7 +502,7 @@ class MultiOrb extends PowerUp_1.PowerUp {
 }
 exports.MultiOrb = MultiOrb;
 
-},{"./Orb":4,"./PlayerBoard":5,"./PowerUp":6}],9:[function(require,module,exports){
+},{"./Orb":5,"./PlayerBoard":7,"./PowerUp":8}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const PowerUp_1 = require("./PowerUp");
@@ -471,7 +528,7 @@ class XXLBoard extends PowerUp_1.PowerUp {
 }
 exports.XXLBoard = XXLBoard;
 
-},{"./PlayerBoard":5,"./PowerUp":6,"./PowerUpUI":7}],10:[function(require,module,exports){
+},{"./PlayerBoard":7,"./PowerUp":8,"./PowerUpUI":9}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -499,7 +556,7 @@ StatsUI.render = () => {
 };
 exports.StatsUI = StatsUI;
 
-},{"../global":12}],11:[function(require,module,exports){
+},{"../global":14}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -546,7 +603,7 @@ class TextUI {
 }
 exports.TextUI = TextUI;
 
-},{"../global":12}],12:[function(require,module,exports){
+},{"../global":14}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.canvas = document.querySelector('#canvas');
@@ -565,7 +622,7 @@ exports.game = {
     }
 };
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -594,7 +651,7 @@ exports.level_1 = () => {
     createRow(6);
 };
 
-},{"../classes/Brick":1,"../classes/BrickArea":2,"../classes/StatsUI":10,"../global":12}],14:[function(require,module,exports){
+},{"../classes/Brick":1,"../classes/BrickArea":2,"../classes/StatsUI":12,"../global":14}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("./global");
@@ -607,6 +664,8 @@ const Orb_1 = require("./classes/Orb");
 const level_1_1 = require("./level/level-1");
 const PowerUp_1 = require("./classes/PowerUp");
 const Brick_1 = require("./classes/Brick");
+const Orb_DevOrb_1 = require("./classes/Orb_DevOrb");
+const FX_1 = require("./classes/FX");
 // INIT GAME ============================================================
 document.addEventListener('DOMContentLoaded', () => init());
 const init = () => {
@@ -655,6 +714,7 @@ const init = () => {
     new PowerUpUI_1.PowerUpUI();
     new PlayerBoard_1.PlayerBoard();
     new Orb_1.Orb(PlayerBoard_1.PlayerBoard.instance.x, PlayerBoard_1.PlayerBoard.instance.y - 10);
+    new Orb_DevOrb_1.DevOrb();
     level_1_1.level_1();
     gameLoop();
 };
@@ -681,6 +741,7 @@ const gameLoop = () => {
     PowerUp_1.PowerUp.render();
     PlayerBoard_1.PlayerBoard.render();
     Orb_1.Orb.render();
+    FX_1.FX.render();
     if (global_1.game.misc.texts.calcs)
         global_1.game.misc.texts.calcs.draw();
     if (global_1.game.over)
@@ -690,4 +751,4 @@ const gameLoop = () => {
     });
 };
 
-},{"./classes/Brick":1,"./classes/BrickArea":2,"./classes/Orb":4,"./classes/PlayerBoard":5,"./classes/PowerUp":6,"./classes/PowerUpUI":7,"./classes/StatsUI":10,"./classes/TextUI":11,"./global":12,"./level/level-1":13}]},{},[14]);
+},{"./classes/Brick":1,"./classes/BrickArea":2,"./classes/FX":3,"./classes/Orb":5,"./classes/Orb_DevOrb":6,"./classes/PlayerBoard":7,"./classes/PowerUp":8,"./classes/PowerUpUI":9,"./classes/StatsUI":12,"./classes/TextUI":13,"./global":14,"./level/level-1":15}]},{},[16]);
