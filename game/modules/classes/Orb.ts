@@ -11,7 +11,7 @@ export class Orb {
     vy: number;
     radius: number;
     fillColor: string;
-    maxTrailLength: number;
+    trailLength: number;
     trail: any[];
     hits: (obj: any) => boolean;
     isColliding: () => void;
@@ -27,19 +27,13 @@ export class Orb {
 	}
 
 	constructor(x: number, y: number) {
-		// this.x = x;
-		// this.y = y;
-		document.addEventListener('mousemove', e => {
-			this.x = e.pageX;
-			this.y = e.pageY;
-		})
-		this.vx = 0;
-		this.vy = 0;
-		// this.vx = Math.floor(Math.random() * 5 + 3);
-		// this.vy = 5;
+		this.x = x;
+		this.y = y;
+		this.vx = Math.floor(Math.random() * 5 + 3);
+		this.vy = 5;
 		this.radius = 6;
 		this.fillColor = 'rgb(0, 255, 255)';
-		this.maxTrailLength = 7;
+		this.trailLength = 7;
 		this.trail = [];
 		// once constructed, push instance into array
 		Orb.instances.push(this);
@@ -59,11 +53,6 @@ export class Orb {
 		}
 
 		this.hits = obj => {
-			// this.y + this.radius >= obj.y | top
-			// this.y - this.radius <= obj.y + obj.h | bottom
-			// this.x + this.radius >= obj.x | left
-			// this.x - this.radius <= obj.x + obj.w | right
-			// return (this.x + this.radius) >= obj.x && this.x - this.radius <= (obj.x + obj.w) && (this.y + this.radius) >= obj.y && this.y + this.radius <= (obj.y + obj.h + this.radius * 2);
 			return this.y + this.radius >= obj.y && this.y - this.radius <= obj.y + obj.h && this.x + this.radius >= obj.x && this.x - this.radius <= obj.x + obj.w;
 		}
 
@@ -76,7 +65,8 @@ export class Orb {
 						let brick = segments[i].contains[j];
 						if (this.hits(brick)) {
 							this.vy *= -1;
-							brick.hidden = true;
+							brick.poof();
+							// brick.hidden = true;
 							brick.dropPowerUp();
 							segments[i].contains.splice(j, 1);
 						}
@@ -107,7 +97,7 @@ export class Orb {
 		this.drawTrail = () => {
 			ctx.save();
 			this.trail.push({x: this.x, y: this.y});
-			if (this.trail.length > this.maxTrailLength) this.trail.shift();
+			if (this.trail.length > this.trailLength) this.trail.shift();
 
 			let radius = this.radius - 2;
 			let opacity = 0.1;
