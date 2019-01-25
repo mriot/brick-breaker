@@ -8,6 +8,8 @@ import { Orb } from './classes/Orb';
 import { level_1 } from './level/level-1';
 import { PowerUp } from './classes/PowerUp';
 import { Brick } from './classes/Brick';
+import { DevOrb } from './classes/Orb_DevOrb';
+import { FX } from './classes/FX';
 
 // INIT GAME ============================================================
 document.addEventListener('DOMContentLoaded', () => init())
@@ -61,6 +63,7 @@ const init = () => {
 	new PowerUpUI();
 	new PlayerBoard();
 	new Orb(PlayerBoard.instance.x, PlayerBoard.instance.y - 10);
+	new DevOrb();
 	
 	level_1();
 
@@ -89,11 +92,10 @@ const gameLoop = () => {
 	PowerUp.render();
 	PlayerBoard.render();
 	Orb.render();
+	FX.render();
 
 	if (game.misc.texts.calcs) game.misc.texts.calcs.draw();
-	
 	if (game.over) game.misc.texts.gameover.pulse();
-
 
 	requestAnimationFrame(() => {
 		gameLoop()
