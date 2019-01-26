@@ -58,12 +58,12 @@ const init = () => {
 	game.misc.texts.usePowerUp = new TextUI('E = PowerUp', 'center', viewport.h - 75, '#fff', '30px Impact');
 	
 	// game setup
-	new BrickArea(0, 45, viewport.w, viewport.h / 2);
+	new BrickArea(0, 45, viewport.w, viewport.h - 45);
 	new StatsUI();
 	new PowerUpUI();
 	new PlayerBoard();
 	new Orb(PlayerBoard.instance.x, PlayerBoard.instance.y - 10);
-	new DevOrb();
+	// new DevOrb();
 	
 	level_1();
 
@@ -85,14 +85,14 @@ const gameLoop = () => {
 	if (!game.running) game.misc.texts.usePowerUp.draw();
 	
 	// GAME COMPONENTS
-	BrickArea.render();
+	// BrickArea.render();
 	StatsUI.render();
 	PowerUpUI.render();
 	Brick.render();
 	PowerUp.render();
 	PlayerBoard.render();
 	Orb.render();
-	FX.render();
+	// FX.render();
 
 	if (game.misc.texts.calcs) game.misc.texts.calcs.draw();
 	if (game.over) game.misc.texts.gameover.pulse();
