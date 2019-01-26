@@ -1,4 +1,5 @@
 import { Orb } from "./Orb";
+import { viewport } from "../global";
 
 export class DevOrb extends Orb {
     vx: number;
@@ -7,7 +8,7 @@ export class DevOrb extends Orb {
 	y: any;
 
 	constructor() {
-		super(0, 0);
+		super(viewport.w, viewport.y - 10);
 		this.vx = 0;
 		this.vy = 0;
 		this.fillColor = 'red';

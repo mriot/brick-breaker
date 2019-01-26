@@ -25,5 +25,7 @@ export const level_1 = () => {
 	createRow(2);
 	createRow(11);
 	createRow(4);
-	createRow(6);
+	createRow(1);
+	createRow(3);
+	createRow(7);
 }
