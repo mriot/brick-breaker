@@ -35,7 +35,7 @@ export class GridSegment {
 			ctx.strokeRect(this.x, this.y, this.w, this.h);
 			ctx.font = '20px Arial';
 			ctx.fillStyle = '#000';
-			ctx.fillText(this.id, this.x + this.w / 2.2, this.y + this.h / 1.6);
+			ctx.fillText(this.id, this.x + this.w / 2.2, this.y + this.h / 1.8);
 			ctx.restore();
 		}
 	}
