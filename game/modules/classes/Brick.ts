@@ -9,9 +9,10 @@ export class Brick {
     y: number;
     w: number;
     h: number;
-    hidden: boolean;
+    destroyed: boolean;
     hitsRequired: number;
 	texture: HTMLImageElement;
+	inside: any[];
     dropPowerUp: () => void;
     draw: () => void;
 	poof: () => void;
@@ -19,7 +20,7 @@ export class Brick {
 	public static instances: Brick[] = [];
 	public static render = () => {
 		for (let i = 0; i < Brick.instances.length; i++) {
-			if (!Brick.instances[i].hidden) {
+			if (!Brick.instances[i].destroyed) {
 				Brick.instances[i].draw();
 			}
 		}
@@ -30,7 +31,8 @@ export class Brick {
 		this.y = y;
 		this.w = 60;
 		this.h = 40;
-		this.hidden = false;
+		this.inside = [];
+		this.destroyed = false;
 		this.hitsRequired = 1;
 		this.texture = new Image(0, 0);
 		this.texture.src = 'img/brick.png';
@@ -42,6 +44,7 @@ export class Brick {
 			let seg = GridSegment.instances[i];
 			if (this.x + this.w >= seg.x && this.x <= seg.x + seg.w && this.y + this.h >= seg.y && this.y <= seg.y + seg.h) {
 				GridSegment.instances[i].contains.push(this);
+				this.inside.push(GridSegment.instances[i]);
 			}
 		}
 
@@ -54,12 +57,21 @@ export class Brick {
 		}
 
 		this.poof = () => {
-			new FX('poof', this.x, this.y);
-			this.hidden = true;
+			this.destroyed = true;
+			// remove brick from segments
+			this.inside.forEach(seg => {
+				for (let i = 0; i < seg.contains.length; i++) {
+					if (seg.contains[i].destroyed) seg.contains.splice(i, 1);
+				}
+			});
+			this.dropPowerUp();
+			// new FX('poof', this.x, this.y);
 		}
 
 		this.draw = () => {
 			ctx.save();
+			// ctx.strokeStyle = '#fff';
+			// ctx.strokeRect(this.x, this.y, this.w, this.h);
 			ctx.drawImage(this.texture, this.x, this.y, this.w, this.h);
 			ctx.restore();
 		}
