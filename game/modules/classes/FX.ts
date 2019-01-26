@@ -30,7 +30,7 @@ export class FX {
         }
 
         this.x = x;
-        this.y = x;
+        this.y = y;
         this.effect = fxType[effect];
         this.img = new Image(0, 0);
         this.img.src = this.effect.src;
