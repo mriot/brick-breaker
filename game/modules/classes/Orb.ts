@@ -18,6 +18,7 @@ export class Orb {
     drawTrail: () => void;
 	draw: () => void;
 	kill: () => void;
+	collision: (brick: any) => boolean;
 
 	public static instances: Orb[] = [];
 	public static render = () => {
@@ -31,12 +32,19 @@ export class Orb {
 		this.y = y;
 		this.vx = Math.floor(Math.random() * 5 + 3);
 		this.vy = 5;
+		// this.vx = 1.5;
+		// this.vy = 2;
 		this.radius = 6;
 		this.fillColor = 'rgb(0, 255, 255)';
 		this.trailLength = 7;
 		this.trail = [];
 		// once constructed, push instance into array
 		Orb.instances.push(this);
+
+		document.addEventListener('keydown', e => {
+			if (e.keyCode === 187) this.vx += 1
+			if (e.keyCode === 189) this.vx -= 1
+		})
 
 		// remove instance from array
 		this.kill = () => {
@@ -56,19 +64,95 @@ export class Orb {
 			return this.y + this.radius >= obj.y && this.y - this.radius <= obj.y + obj.h && this.x + this.radius >= obj.x && this.x - this.radius <= obj.x + obj.w;
 		}
 
+		let hitTop = brick => {
+			return (
+				this.y + this.radius + 1 >= brick.y &&
+				this.y - this.radius - 1 <= brick.y &&
+				this.x - this.radius - 1 <= brick.x + brick.w &&
+				this.x + this.radius + 1 >= brick.x
+			)
+		}
+		let hitLeft = brick => {
+			return (
+				this.x + this.radius + 1 >= brick.x &&
+				this.x - this.radius - 1 <= brick.x &&
+				this.y - this.radius - 1 <= brick.y + brick.h &&
+				this.y + this.radius + 1 >= brick.y
+			)
+		}
+		let hitRight = brick => {
+			return (
+				this.x + this.radius + 1 >= brick.x + brick.w &&
+				this.x - this.radius - 1 <= brick.x + brick.w &&
+				this.y - this.radius - 1 <= brick.y + brick.h &&
+				this.y + this.radius + 1 >= brick.y
+			)
+		}
+		let hitBottom = brick => {
+			return (
+				this.y + this.radius + 1 >= brick.y + brick.h &&
+				this.y - this.radius - 1 <= brick.y + brick.h &&
+				this.x - this.radius - 1 <= brick.x + brick.w &&
+				this.x + this.radius + 1 >= brick.x
+			)
+		}
+
+		this.collision = brick => {
+			let coll = {
+				top: hitTop(brick),
+				left: hitLeft(brick),
+				right: hitRight(brick),
+				bottom: hitBottom(brick)
+			};
+			
+			switch (true) {
+				case coll.top && coll.left:
+					// console.log('TOP LEFT')
+					this.vx *= -1;
+					break;
+				case coll.top && coll.right:
+					// console.log('TOP RIGHT')
+					this.vx *= -1;
+					break;
+				case coll.bottom && coll.left:
+					// console.log('BOTTOM LEFT')
+					this.vx *= -1;
+					break;
+				case coll.bottom && coll.right:
+					// console.log('BOTTOM RIGHT')
+					this.vx *= -1;
+					break;
+				case coll.top:
+					// console.log('TOP')
+					this.vy *= -1;
+					break;
+				case coll.bottom:
+					// console.log('BOTTOM')
+					this.vy *= -1;
+					break;
+				case coll.left:
+					// console.log('LEFT')
+					this.vx *= -1;
+					break;
+				case coll.right:
+					// console.log('RIGHT')
+					this.vx *= -1;
+					break;
+				default:
+					return false;
+			}
+			return true;
+		}
+
 		this.isColliding = () => {
 			let segments = GridSegment.instances;
 			for (let i = 0; i < segments.length; i++) {
 				if (this.hits(segments[i])) {
-					game.misc.texts.calcs = new TextUI(segments[i].contains.length + "", this.x, this.y - this.radius * 2, '#fff', '20px Arial');
+					// game.misc.texts.calcs = new TextUI(segments[i].contains.length + "", this.x, this.y - this.radius * 2, '#fff', '20px Arial');
 					for (let j = 0; j < segments[i].contains.length; j++) {
 						let brick = segments[i].contains[j];
-						if (this.hits(brick)) {
-							this.vy *= -1;
+						if (this.collision(brick)) {
 							brick.poof();
-							// brick.hidden = true;
-							brick.dropPowerUp();
-							segments[i].contains.splice(j, 1);
 						}
 					}
 				}
