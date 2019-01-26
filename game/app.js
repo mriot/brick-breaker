@@ -5,14 +5,14 @@ const global_1 = require("../global");
 const PowerUp_MultiOrb_1 = require("./PowerUp_MultiOrb");
 const PowerUp_XXLBoard_1 = require("./PowerUp_XXLBoard");
 const GridSegment_1 = require("./GridSegment");
-const FX_1 = require("./FX");
 class Brick {
     constructor(x, y) {
         this.x = x;
         this.y = y;
         this.w = 60;
         this.h = 40;
-        this.hidden = false;
+        this.inside = [];
+        this.destroyed = false;
         this.hitsRequired = 1;
         this.texture = new Image(0, 0);
         this.texture.src = 'img/brick.png';
@@ -22,6 +22,7 @@ class Brick {
             let seg = GridSegment_1.GridSegment.instances[i];
             if (this.x + this.w >= seg.x && this.x <= seg.x + seg.w && this.y + this.h >= seg.y && this.y <= seg.y + seg.h) {
                 GridSegment_1.GridSegment.instances[i].contains.push(this);
+                this.inside.push(GridSegment_1.GridSegment.instances[i]);
             }
         }
         this.dropPowerUp = () => {
@@ -34,11 +35,21 @@ class Brick {
             }
         };
         this.poof = () => {
-            new FX_1.FX('poof', this.x, this.y);
-            this.hidden = true;
+            this.destroyed = true;
+            // remove brick from segments
+            this.inside.forEach(seg => {
+                for (let i = 0; i < seg.contains.length; i++) {
+                    if (seg.contains[i].destroyed)
+                        seg.contains.splice(i, 1);
+                }
+            });
+            this.dropPowerUp();
+            // new FX('poof', this.x, this.y);
         };
         this.draw = () => {
             global_1.ctx.save();
+            // ctx.strokeStyle = '#fff';
+            // ctx.strokeRect(this.x, this.y, this.w, this.h);
             global_1.ctx.drawImage(this.texture, this.x, this.y, this.w, this.h);
             global_1.ctx.restore();
         };
@@ -47,14 +58,14 @@ class Brick {
 Brick.instances = [];
 Brick.render = () => {
     for (let i = 0; i < Brick.instances.length; i++) {
-        if (!Brick.instances[i].hidden) {
+        if (!Brick.instances[i].destroyed) {
             Brick.instances[i].draw();
         }
     }
 };
 exports.Brick = Brick;
 
-},{"../global":14,"./FX":3,"./GridSegment":4,"./PowerUp_MultiOrb":10,"./PowerUp_XXLBoard":11}],2:[function(require,module,exports){
+},{"../global":12,"./GridSegment":3,"./PowerUp_MultiOrb":8,"./PowerUp_XXLBoard":9}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -111,50 +122,7 @@ BrickArea.render = () => {
 };
 exports.BrickArea = BrickArea;
 
-},{"../global":14,"./GridSegment":4}],3:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const global_1 = require("../global");
-class FX {
-    constructor(effect, x, y) {
-        let fxType = {
-            'poof': {
-                src: 'img/blackSmoke11.png',
-                lifespan: 500,
-            }
-        };
-        this.x = x;
-        this.y = x;
-        this.effect = fxType[effect];
-        this.img = new Image(0, 0);
-        this.img.src = this.effect.src;
-        this.dead = false;
-        this.drawn = 0;
-        FX.instances.push(this);
-        this.draw = () => {
-            global_1.ctx.save();
-            global_1.ctx.drawImage(this.img, this.x, this.y, 100, 100);
-            global_1.ctx.restore();
-            this.drawn++;
-            if (this.drawn >= 60 / (1000 / this.effect.lifespan))
-                this.dead = true;
-        };
-    }
-}
-FX.instances = [];
-FX.render = () => {
-    for (let i = 0; i < FX.instances.length; i++) {
-        if (FX.instances[i].dead) {
-            FX.instances.splice(i, 1);
-        }
-        else {
-            FX.instances[i].draw();
-        }
-    }
-};
-exports.FX = FX;
-
-},{"../global":14}],4:[function(require,module,exports){
+},{"../global":12,"./GridSegment":3}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -173,6 +141,8 @@ class GridSegment {
             global_1.ctx.save();
             global_1.ctx.strokeStyle = this.color;
             global_1.ctx.strokeRect(this.x, this.y, this.w, this.h);
+            global_1.ctx.font = '20px Arial';
+            global_1.ctx.fillStyle = '#000';
             global_1.ctx.fillText(this.id, this.x + this.w / 2.2, this.y + this.h / 1.6);
             global_1.ctx.restore();
         };
@@ -186,7 +156,7 @@ GridSegment.render = () => {
 };
 exports.GridSegment = GridSegment;
 
-},{"../global":14,"./BrickArea":2}],5:[function(require,module,exports){
+},{"../global":12,"./BrickArea":2}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -200,12 +170,20 @@ class Orb {
         this.y = y;
         this.vx = Math.floor(Math.random() * 5 + 3);
         this.vy = 5;
+        // this.vx = 1.5;
+        // this.vy = 2;
         this.radius = 6;
         this.fillColor = 'rgb(0, 255, 255)';
         this.trailLength = 7;
         this.trail = [];
         // once constructed, push instance into array
         Orb.instances.push(this);
+        document.addEventListener('keydown', e => {
+            if (e.keyCode === 187)
+                this.vx += 1;
+            if (e.keyCode === 189)
+                this.vx -= 1;
+        });
         // remove instance from array
         this.kill = () => {
             for (let i = 0; i < Orb.instances.length; i++) {
@@ -221,19 +199,84 @@ class Orb {
         this.hits = obj => {
             return this.y + this.radius >= obj.y && this.y - this.radius <= obj.y + obj.h && this.x + this.radius >= obj.x && this.x - this.radius <= obj.x + obj.w;
         };
+        let hitTop = brick => {
+            return (this.y + this.radius + 1 >= brick.y &&
+                this.y - this.radius - 1 <= brick.y &&
+                this.x - this.radius - 1 <= brick.x + brick.w &&
+                this.x + this.radius + 1 >= brick.x);
+        };
+        let hitLeft = brick => {
+            return (this.x + this.radius + 1 >= brick.x &&
+                this.x - this.radius - 1 <= brick.x &&
+                this.y - this.radius - 1 <= brick.y + brick.h &&
+                this.y + this.radius + 1 >= brick.y);
+        };
+        let hitRight = brick => {
+            return (this.x + this.radius + 1 >= brick.x + brick.w &&
+                this.x - this.radius - 1 <= brick.x + brick.w &&
+                this.y - this.radius - 1 <= brick.y + brick.h &&
+                this.y + this.radius + 1 >= brick.y);
+        };
+        let hitBottom = brick => {
+            return (this.y + this.radius + 1 >= brick.y + brick.h &&
+                this.y - this.radius - 1 <= brick.y + brick.h &&
+                this.x - this.radius - 1 <= brick.x + brick.w &&
+                this.x + this.radius + 1 >= brick.x);
+        };
+        this.collision = brick => {
+            let coll = {
+                top: hitTop(brick),
+                left: hitLeft(brick),
+                right: hitRight(brick),
+                bottom: hitBottom(brick)
+            };
+            switch (true) {
+                case coll.top && coll.left:
+                    // console.log('TOP LEFT')
+                    this.vx *= -1;
+                    break;
+                case coll.top && coll.right:
+                    // console.log('TOP RIGHT')
+                    this.vx *= -1;
+                    break;
+                case coll.bottom && coll.left:
+                    // console.log('BOTTOM LEFT')
+                    this.vx *= -1;
+                    break;
+                case coll.bottom && coll.right:
+                    // console.log('BOTTOM RIGHT')
+                    this.vx *= -1;
+                    break;
+                case coll.top:
+                    // console.log('TOP')
+                    this.vy *= -1;
+                    break;
+                case coll.bottom:
+                    // console.log('BOTTOM')
+                    this.vy *= -1;
+                    break;
+                case coll.left:
+                    // console.log('LEFT')
+                    this.vx *= -1;
+                    break;
+                case coll.right:
+                    // console.log('RIGHT')
+                    this.vx *= -1;
+                    break;
+                default:
+                    return false;
+            }
+            return true;
+        };
         this.isColliding = () => {
             let segments = GridSegment_1.GridSegment.instances;
             for (let i = 0; i < segments.length; i++) {
                 if (this.hits(segments[i])) {
-                    global_1.game.misc.texts.calcs = new TextUI_1.TextUI(segments[i].contains.length + "", this.x, this.y - this.radius * 2, '#fff', '20px Arial');
+                    // game.misc.texts.calcs = new TextUI(segments[i].contains.length + "", this.x, this.y - this.radius * 2, '#fff', '20px Arial');
                     for (let j = 0; j < segments[i].contains.length; j++) {
                         let brick = segments[i].contains[j];
-                        if (this.hits(brick)) {
-                            this.vy *= -1;
+                        if (this.collision(brick)) {
                             brick.poof();
-                            // brick.hidden = true;
-                            brick.dropPowerUp();
-                            segments[i].contains.splice(j, 1);
                         }
                     }
                 }
@@ -315,26 +358,7 @@ Orb.render = () => {
 };
 exports.Orb = Orb;
 
-},{"../global":14,"./BrickArea":2,"./GridSegment":4,"./PlayerBoard":7,"./TextUI":13}],6:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const Orb_1 = require("./Orb");
-class DevOrb extends Orb_1.Orb {
-    constructor() {
-        super(0, 0);
-        this.vx = 0;
-        this.vy = 0;
-        this.fillColor = 'red';
-        Orb_1.Orb.instances.push(this);
-        document.addEventListener('mousemove', e => {
-            this.x = e.pageX;
-            this.y = e.pageY;
-        });
-    }
-}
-exports.DevOrb = DevOrb;
-
-},{"./Orb":5}],7:[function(require,module,exports){
+},{"../global":12,"./BrickArea":2,"./GridSegment":3,"./PlayerBoard":5,"./TextUI":11}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -380,7 +404,7 @@ PlayerBoard.render = () => {
 };
 exports.PlayerBoard = PlayerBoard;
 
-},{"../global":14}],8:[function(require,module,exports){
+},{"../global":12}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -439,7 +463,7 @@ PowerUp.render = () => {
 };
 exports.PowerUp = PowerUp;
 
-},{"../global":14,"./PlayerBoard":7,"./PowerUpUI":9}],9:[function(require,module,exports){
+},{"../global":12,"./PlayerBoard":5,"./PowerUpUI":7}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -484,7 +508,7 @@ PowerUpUI.render = () => {
 };
 exports.PowerUpUI = PowerUpUI;
 
-},{"../global":14,"./PowerUp":8}],10:[function(require,module,exports){
+},{"../global":12,"./PowerUp":6}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Orb_1 = require("./Orb");
@@ -502,7 +526,7 @@ class MultiOrb extends PowerUp_1.PowerUp {
 }
 exports.MultiOrb = MultiOrb;
 
-},{"./Orb":5,"./PlayerBoard":7,"./PowerUp":8}],11:[function(require,module,exports){
+},{"./Orb":4,"./PlayerBoard":5,"./PowerUp":6}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const PowerUp_1 = require("./PowerUp");
@@ -528,7 +552,7 @@ class XXLBoard extends PowerUp_1.PowerUp {
 }
 exports.XXLBoard = XXLBoard;
 
-},{"./PlayerBoard":7,"./PowerUp":8,"./PowerUpUI":9}],12:[function(require,module,exports){
+},{"./PlayerBoard":5,"./PowerUp":6,"./PowerUpUI":7}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -556,7 +580,7 @@ StatsUI.render = () => {
 };
 exports.StatsUI = StatsUI;
 
-},{"../global":14}],13:[function(require,module,exports){
+},{"../global":12}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -603,7 +627,7 @@ class TextUI {
 }
 exports.TextUI = TextUI;
 
-},{"../global":14}],14:[function(require,module,exports){
+},{"../global":12}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.canvas = document.querySelector('#canvas');
@@ -622,7 +646,7 @@ exports.game = {
     }
 };
 
-},{}],15:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -648,10 +672,12 @@ exports.level_1 = () => {
     createRow(2);
     createRow(11);
     createRow(4);
-    createRow(6);
+    createRow(1);
+    createRow(3);
+    createRow(7);
 };
 
-},{"../classes/Brick":1,"../classes/BrickArea":2,"../classes/StatsUI":12,"../global":14}],16:[function(require,module,exports){
+},{"../classes/Brick":1,"../classes/BrickArea":2,"../classes/StatsUI":10,"../global":12}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("./global");
@@ -664,8 +690,6 @@ const Orb_1 = require("./classes/Orb");
 const level_1_1 = require("./level/level-1");
 const PowerUp_1 = require("./classes/PowerUp");
 const Brick_1 = require("./classes/Brick");
-const Orb_DevOrb_1 = require("./classes/Orb_DevOrb");
-const FX_1 = require("./classes/FX");
 // INIT GAME ============================================================
 document.addEventListener('DOMContentLoaded', () => init());
 const init = () => {
@@ -709,12 +733,12 @@ const init = () => {
     global_1.game.misc.texts.moveRight = new TextUI_1.TextUI('D >>', global_1.viewport.w / 2 + 125, global_1.viewport.h - 35, '#fff', '40px Impact');
     global_1.game.misc.texts.usePowerUp = new TextUI_1.TextUI('E = PowerUp', 'center', global_1.viewport.h - 75, '#fff', '30px Impact');
     // game setup
-    new BrickArea_1.BrickArea(0, 45, global_1.viewport.w, global_1.viewport.h / 2);
+    new BrickArea_1.BrickArea(0, 45, global_1.viewport.w, global_1.viewport.h - 45);
     new StatsUI_1.StatsUI();
     new PowerUpUI_1.PowerUpUI();
     new PlayerBoard_1.PlayerBoard();
     new Orb_1.Orb(PlayerBoard_1.PlayerBoard.instance.x, PlayerBoard_1.PlayerBoard.instance.y - 10);
-    new Orb_DevOrb_1.DevOrb();
+    // new DevOrb();
     level_1_1.level_1();
     gameLoop();
 };
@@ -734,14 +758,14 @@ const gameLoop = () => {
     if (!global_1.game.running)
         global_1.game.misc.texts.usePowerUp.draw();
     // GAME COMPONENTS
-    BrickArea_1.BrickArea.render();
+    // BrickArea.render();
     StatsUI_1.StatsUI.render();
     PowerUpUI_1.PowerUpUI.render();
     Brick_1.Brick.render();
     PowerUp_1.PowerUp.render();
     PlayerBoard_1.PlayerBoard.render();
     Orb_1.Orb.render();
-    FX_1.FX.render();
+    // FX.render();
     if (global_1.game.misc.texts.calcs)
         global_1.game.misc.texts.calcs.draw();
     if (global_1.game.over)
@@ -751,4 +775,4 @@ const gameLoop = () => {
     });
 };
 
-},{"./classes/Brick":1,"./classes/BrickArea":2,"./classes/FX":3,"./classes/Orb":5,"./classes/Orb_DevOrb":6,"./classes/PlayerBoard":7,"./classes/PowerUp":8,"./classes/PowerUpUI":9,"./classes/StatsUI":12,"./classes/TextUI":13,"./global":14,"./level/level-1":15}]},{},[16]);
+},{"./classes/Brick":1,"./classes/BrickArea":2,"./classes/Orb":4,"./classes/PlayerBoard":5,"./classes/PowerUp":6,"./classes/PowerUpUI":7,"./classes/StatsUI":10,"./classes/TextUI":11,"./global":12,"./level/level-1":13}]},{},[14]);
