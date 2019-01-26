@@ -71,11 +71,12 @@ const init = () => {
 }
 
 const gameLoop = () => {
+	// clear canvas
+	ctx.clearRect(0, 0, viewport.w, viewport.h);
+	
 	// draw background image
 	ctx.drawImage(game.misc.background, 0, 0, viewport.w, viewport.h);
-
-	// clear canvas
-	ctx.fillStyle = 'rgba(22, 22, 24, 0.75)';
+	ctx.fillStyle = 'rgba(22, 22, 24, 0.7)';
 	ctx.fillRect(0, 0, viewport.w, viewport.h);
 
 	// display 'game start' text while game is not running
@@ -98,6 +99,10 @@ const gameLoop = () => {
 	if (game.over) game.misc.texts.gameover.pulse();
 
 	requestAnimationFrame(() => {
-		gameLoop()
+		game.frameCounter++;
+		let fps = 1 / ((performance.now() - game.lastFrameRendered) / 1000);
+		game.lastFrameRendered = performance.now();
+		if (game.frameCounter > 30) { game.fps = fps; game.frameCounter = 0; }
+		gameLoop();
 	});
 }

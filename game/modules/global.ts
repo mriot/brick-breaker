@@ -7,6 +7,9 @@ export let viewport: any = {
 
 export let game: any = {
 	running: false,
+	fps: 0,
+	lastFrameRendered: 0,
+	frameCounter: 0,
 	misc: {
 		texts: {
 			startGame: ''

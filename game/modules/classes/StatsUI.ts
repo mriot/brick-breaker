@@ -1,4 +1,4 @@
-import { viewport, ctx } from "../global";
+import { viewport, ctx, game } from "../global";
 
 export class StatsUI {
     w: number;
@@ -20,13 +20,17 @@ export class StatsUI {
 
 		this.draw = () => {
 			ctx.save();
-			ctx.fillStyle = '#aaa';
-			ctx.font = "16px Impact";
-			ctx.fillText(`Level ${this.level}`, 10, this.h - 5);
-
 			// container
 			ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
 			ctx.fillRect(0, 0, viewport.w, this.h + 10);
+			// level
+			ctx.fillStyle = '#aaa';
+			ctx.font = "16px Arial";
+			ctx.fillText(`LEVEL ${this.level}`, 10, this.h - 5);
+			// fps
+			ctx.font = '16px Arial';
+			let fps = `${game.fps.toFixed(0)} FPS`;
+			ctx.fillText(fps, viewport.w - ctx.measureText(fps).width - 10, this.h - 5);
 			ctx.restore();
 		}
 	}
