@@ -31,9 +31,9 @@ export class PowerUpUI {
 		this.timer = lifetime => {
 			this.powerUpLifetime = this.initLifetime = lifetime;
 			let timer = setInterval(() => {
-				this.powerUpLifetime -= 0.15;
+				this.powerUpLifetime -= 0.016;
 				if (this.powerUpLifetime <= 0) clearInterval(timer);
-			}, 100);
+			}, 1000/60);
 		}
 
 		this.draw = () => {
