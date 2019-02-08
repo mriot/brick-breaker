@@ -5,6 +5,7 @@ const global_1 = require("../global");
 const PowerUp_MultiOrb_1 = require("./PowerUp_MultiOrb");
 const PowerUp_XXLBoard_1 = require("./PowerUp_XXLBoard");
 const GridSegment_1 = require("./GridSegment");
+const PowerUp_FireOrb_1 = require("./PowerUp_FireOrb");
 class Brick {
     constructor(x, y) {
         this.x = x;
@@ -26,12 +27,20 @@ class Brick {
             }
         }
         this.dropPowerUp = () => {
-            if (Math.round(Math.random() * 5) === 1 || false) {
-                let num = Math.round(Math.random() * 2);
-                if (num === 0)
-                    new PowerUp_XXLBoard_1.XXLBoard(this.x, this.y);
-                if (num === 1)
-                    new PowerUp_MultiOrb_1.MultiOrb(this.x, this.y);
+            if (Math.round(Math.random() * 6) === 1 || false) {
+                switch (Math.floor(Math.random() * 3)) {
+                    case 0:
+                        new PowerUp_MultiOrb_1.MultiOrb(this.x, this.y);
+                        break;
+                    case 1:
+                        new PowerUp_XXLBoard_1.XXLBoard(this.x, this.y);
+                        break;
+                    case 2:
+                        new PowerUp_FireOrb_1.FireOrb(this.x, this.y);
+                        break;
+                    default:
+                        console.warn('Brick.ts : dropPowerUp() : Out of range!');
+                }
             }
         };
         this.poof = () => {
@@ -65,33 +74,37 @@ Brick.render = () => {
 };
 exports.Brick = Brick;
 
-},{"../global":12,"./GridSegment":3,"./PowerUp_MultiOrb":8,"./PowerUp_XXLBoard":9}],2:[function(require,module,exports){
+},{"../global":14,"./GridSegment":3,"./PowerUp_FireOrb":9,"./PowerUp_MultiOrb":10,"./PowerUp_XXLBoard":11}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
 const GridSegment_1 = require("./GridSegment");
-class BrickArea {
+class Grid {
     constructor(x, y, w, h) {
         this.x = x;
         this.y = y;
         this.w = w;
         this.h = h;
-        this.segmentsPerRow = 5;
-        BrickArea.instance = this;
+        Grid.instance = this;
         // generate grid segments
         let offsetX = this.x;
         let offsetY = this.y;
         let col = 1;
-        for (let i = 0; i < this.segmentsPerRow * this.segmentsPerRow; i++) {
-            new GridSegment_1.GridSegment(offsetX, offsetY, this.segmentsPerRow, i);
-            offsetX += this.w / this.segmentsPerRow;
-            if (col === this.segmentsPerRow) {
-                offsetX = this.x; // initial value
-                offsetY += this.h / this.segmentsPerRow;
+        let maxRows = 4;
+        let colsPerRow = 5;
+        // generate grid
+        for (let i = 0; i < colsPerRow * maxRows; i++) {
+            new GridSegment_1.GridSegment(offsetX, offsetY, this.w / colsPerRow, this.h / colsPerRow, i);
+            offsetX += this.w / colsPerRow;
+            if (col === colsPerRow) {
+                offsetX = this.x;
+                offsetY += this.h / colsPerRow;
                 col = 0;
             }
             col++;
         }
+        // bottom segment
+        new GridSegment_1.GridSegment(this.x, offsetY, this.w, this.h / colsPerRow, 20);
         this.draw = () => {
             global_1.ctx.save();
             global_1.ctx.fillStyle = "rgba(0, 255, 0, 0.1)";
@@ -99,7 +112,7 @@ class BrickArea {
             global_1.ctx.fill();
             global_1.ctx.restore();
             GridSegment_1.GridSegment.render();
-            // Ruler
+            // RULER
             global_1.ctx.save();
             global_1.ctx.strokeStyle = 'darkred';
             // vertical
@@ -116,34 +129,32 @@ class BrickArea {
         };
     }
 }
-BrickArea.instance = null;
-BrickArea.render = () => {
-    BrickArea.instance.draw();
+Grid.instance = null;
+Grid.render = () => {
+    Grid.instance.draw();
 };
-exports.BrickArea = BrickArea;
+exports.Grid = Grid;
 
-},{"../global":12,"./GridSegment":3}],3:[function(require,module,exports){
+},{"../global":14,"./GridSegment":3}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
-const BrickArea_1 = require("./BrickArea");
 class GridSegment {
-    constructor(x, y, size, id) {
+    constructor(x, y, w, h, id) {
         this.x = x;
         this.y = y;
-        this.w = BrickArea_1.BrickArea.instance.w / size;
-        this.h = BrickArea_1.BrickArea.instance.h / size;
-        this.color = 'rgba(0, 255, 255, 0.5)';
+        this.w = w;
+        this.h = h;
         this.id = id;
-        this.contains = [];
+        this.contains = []; // bricks
         GridSegment.instances.push(this);
         this.draw = () => {
             global_1.ctx.save();
-            global_1.ctx.strokeStyle = this.color;
+            global_1.ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
             global_1.ctx.strokeRect(this.x, this.y, this.w, this.h);
             global_1.ctx.font = '20px Arial';
             global_1.ctx.fillStyle = '#000';
-            global_1.ctx.fillText(this.id, this.x + this.w / 2.2, this.y + this.h / 1.6);
+            global_1.ctx.fillText(this.id, this.x + this.w / 2 - 10, this.y + this.h / 1.8);
             global_1.ctx.restore();
         };
     }
@@ -156,135 +167,69 @@ GridSegment.render = () => {
 };
 exports.GridSegment = GridSegment;
 
-},{"../global":12,"./BrickArea":2}],4:[function(require,module,exports){
+},{"../global":14}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
 const PlayerBoard_1 = require("./PlayerBoard");
-const BrickArea_1 = require("./BrickArea");
+const Grid_1 = require("./Grid");
 const GridSegment_1 = require("./GridSegment");
-const TextUI_1 = require("./TextUI");
+const functions_1 = require("../utilities/functions");
+const collision_1 = require("../utilities/collision");
 class Orb {
     constructor(x, y) {
+        Orb.instances.push(this);
         this.x = x;
         this.y = y;
-        this.vx = Math.floor(Math.random() * 5 + 3);
-        this.vy = 5;
-        // this.vx = 1.5;
-        // this.vy = 2;
+        this.vx = functions_1.randNum(-10, 10);
+        this.vy = 6;
         this.radius = 6;
         this.fillColor = 'rgb(0, 255, 255)';
         this.trailLength = 7;
         this.trail = [];
-        // once constructed, push instance into array
-        Orb.instances.push(this);
-        document.addEventListener('keydown', e => {
-            if (e.keyCode === 187)
-                this.vx += 1;
-            if (e.keyCode === 189)
-                this.vx -= 1;
-        });
-        // remove instance from array
+        this.fireOrb = Orb.instances[0].fireOrb;
+        // remove instance from instances array
         this.kill = () => {
             for (let i = 0; i < Orb.instances.length; i++) {
                 if (Orb.instances[i] === this) {
                     Orb.instances.splice(i, 1);
                 }
             }
+            // check if that was the last orb -> game over ;-)
             if (Orb.instances.length === 0) {
-                global_1.game.over = true;
-                global_1.game.misc.texts.gameover = new TextUI_1.TextUI('GAME OVER', 'center', global_1.viewport.h / 2 + 50, '#fff', '100px Impact', true);
+                // GameOver.show();
+                // game.over = true;
+                // game.misc.texts.gameover = new TextUI('GAME OVER', 'center', viewport.h / 2 + 50, '#fff', '100px Impact', true);
             }
-        };
-        this.hits = obj => {
-            return this.y + this.radius >= obj.y && this.y - this.radius <= obj.y + obj.h && this.x + this.radius >= obj.x && this.x - this.radius <= obj.x + obj.w;
-        };
-        let hitTop = brick => {
-            return (this.y + this.radius + 1 >= brick.y &&
-                this.y - this.radius - 1 <= brick.y &&
-                this.x - this.radius - 1 <= brick.x + brick.w &&
-                this.x + this.radius + 1 >= brick.x);
-        };
-        let hitLeft = brick => {
-            return (this.x + this.radius + 1 >= brick.x &&
-                this.x - this.radius - 1 <= brick.x &&
-                this.y - this.radius - 1 <= brick.y + brick.h &&
-                this.y + this.radius + 1 >= brick.y);
-        };
-        let hitRight = brick => {
-            return (this.x + this.radius + 1 >= brick.x + brick.w &&
-                this.x - this.radius - 1 <= brick.x + brick.w &&
-                this.y - this.radius - 1 <= brick.y + brick.h &&
-                this.y + this.radius + 1 >= brick.y);
-        };
-        let hitBottom = brick => {
-            return (this.y + this.radius + 1 >= brick.y + brick.h &&
-                this.y - this.radius - 1 <= brick.y + brick.h &&
-                this.x - this.radius - 1 <= brick.x + brick.w &&
-                this.x + this.radius + 1 >= brick.x);
-        };
-        this.collision = brick => {
-            let coll = {
-                top: hitTop(brick),
-                left: hitLeft(brick),
-                right: hitRight(brick),
-                bottom: hitBottom(brick)
-            };
-            switch (true) {
-                case coll.top && coll.left:
-                    // console.log('TOP LEFT')
-                    this.vx *= -1;
-                    break;
-                case coll.top && coll.right:
-                    // console.log('TOP RIGHT')
-                    this.vx *= -1;
-                    break;
-                case coll.bottom && coll.left:
-                    // console.log('BOTTOM LEFT')
-                    this.vx *= -1;
-                    break;
-                case coll.bottom && coll.right:
-                    // console.log('BOTTOM RIGHT')
-                    this.vx *= -1;
-                    break;
-                case coll.top:
-                    // console.log('TOP')
-                    this.vy *= -1;
-                    break;
-                case coll.bottom:
-                    // console.log('BOTTOM')
-                    this.vy *= -1;
-                    break;
-                case coll.left:
-                    // console.log('LEFT')
-                    this.vx *= -1;
-                    break;
-                case coll.right:
-                    // console.log('RIGHT')
-                    this.vx *= -1;
-                    break;
-                default:
-                    return false;
-            }
-            return true;
         };
         this.isColliding = () => {
             let segments = GridSegment_1.GridSegment.instances;
             for (let i = 0; i < segments.length; i++) {
-                if (this.hits(segments[i])) {
-                    // game.misc.texts.calcs = new TextUI(segments[i].contains.length + "", this.x, this.y - this.radius * 2, '#fff', '20px Arial');
-                    for (let j = 0; j < segments[i].contains.length; j++) {
-                        let brick = segments[i].contains[j];
-                        if (this.collision(brick)) {
-                            brick.poof();
+                // segment check
+                if (collision_1.OrbEnters(this, segments[i])) {
+                    if (segments[i].id === segments.length - 1) {
+                        // if bottom segment -> check for board collision
+                        if (collision_1.OrbPaddle(this, PlayerBoard_1.PlayerBoard.instance)) {
+                            // player board 'push down' animation
+                            PlayerBoard_1.PlayerBoard.instance.springAnim();
+                        }
+                    }
+                    else {
+                        // brick collision
+                        // game.misc.texts.calcs = new TextUI(segments[i].contains.length + "", this.x, this.y - this.radius * 2, '#fff', '20px Arial');
+                        for (let j = 0; j < segments[i].contains.length; j++) {
+                            let brick = segments[i].contains[j];
+                            if (collision_1.OrbBrick(this, brick)) {
+                                brick.poof();
+                            }
                         }
                     }
                 }
             }
             // wall collision
-            if (this.y - this.radius < BrickArea_1.BrickArea.instance.y) {
+            if (this.y - this.radius < Grid_1.Grid.instance.y) {
                 this.vy *= -1;
-                this.y = BrickArea_1.BrickArea.instance.y + this.radius;
+                this.y = Grid_1.Grid.instance.y + this.radius;
             } // top wall
             if (this.x - this.radius < 0) {
                 this.vx *= -1;
@@ -297,18 +242,6 @@ class Orb {
             if (this.y + this.radius > global_1.viewport.h) {
                 this.kill();
             } // bottom 'wall'
-            // board collision
-            let distX = (this.x + this.radius) - (PlayerBoard_1.PlayerBoard.instance.x - PlayerBoard_1.PlayerBoard.instance.w / 2);
-            let distY = (this.y + this.radius) - PlayerBoard_1.PlayerBoard.instance.y;
-            if ((distX >= 0 && distX <= PlayerBoard_1.PlayerBoard.instance.w + this.radius * 2) && (distY >= 0 && distY <= PlayerBoard_1.PlayerBoard.instance.h + this.radius * 2)) {
-                if (PlayerBoard_1.PlayerBoard.instance.sticky) {
-                    this.vy = 0;
-                    this.vx = 0;
-                }
-                else {
-                    this.vy *= -1;
-                }
-            }
         };
         this.drawTrail = () => {
             global_1.ctx.save();
@@ -341,6 +274,8 @@ class Orb {
                 this.y = PlayerBoard_1.PlayerBoard.instance.y - 10;
             }
             global_1.ctx.fillStyle = this.fillColor;
+            if (this.fireOrb)
+                global_1.ctx.fillStyle = 'red';
             global_1.ctx.shadowBlur = 10;
             global_1.ctx.shadowColor = "rgba(0, 255, 255, 0.5)";
             global_1.ctx.beginPath();
@@ -358,7 +293,27 @@ Orb.render = () => {
 };
 exports.Orb = Orb;
 
-},{"../global":12,"./BrickArea":2,"./GridSegment":3,"./PlayerBoard":5,"./TextUI":11}],5:[function(require,module,exports){
+},{"../global":14,"../utilities/collision":17,"../utilities/functions":18,"./Grid":2,"./GridSegment":3,"./PlayerBoard":6}],5:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const Orb_1 = require("./Orb");
+const global_1 = require("../global");
+class DevOrb extends Orb_1.Orb {
+    constructor() {
+        super(global_1.viewport.w, global_1.viewport.y - 10);
+        this.vx = 0;
+        this.vy = 0;
+        this.fillColor = 'red';
+        Orb_1.Orb.instances.push(this);
+        document.addEventListener('mousemove', e => {
+            this.x = e.pageX;
+            this.y = e.pageY;
+        });
+    }
+}
+exports.DevOrb = DevOrb;
+
+},{"../global":14,"./Orb":4}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -375,13 +330,13 @@ class PlayerBoard {
         this.texture = new Image(0, 0);
         this.texture.src = 'img/paddle2.png';
         PlayerBoard.instance = this;
-        this.moveLeft = () => {
-            if (this.x - this.w / 2 > 0)
-                this.x -= this.vx;
-        };
-        this.moveRight = () => {
-            if (this.x + this.w / 2 < global_1.viewport.w)
-                this.x += this.vx;
+        this.moveLeft = () => { if (this.x - this.w / 2 > 0)
+            this.x -= this.vx; };
+        this.moveRight = () => { if (this.x + this.w / 2 < global_1.viewport.w)
+            this.x += this.vx; };
+        this.springAnim = () => {
+            this.y += 3;
+            setTimeout(() => this.y -= 3, 70);
         };
         this.draw = () => {
             if (PlayerBoard.controls.left)
@@ -404,7 +359,7 @@ PlayerBoard.render = () => {
 };
 exports.PlayerBoard = PlayerBoard;
 
-},{"../global":12}],6:[function(require,module,exports){
+},{"../global":14}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -415,10 +370,10 @@ class PowerUp {
         this.x = x;
         this.y = y;
         this.vy = 5;
-        this.w = 50;
-        this.h = 25;
-        this.icon = new Image(100, 100);
+        this.icon = new Image(0, 0);
         this.icon.src = 'img/' + icon;
+        this.w = this.icon.naturalWidth;
+        this.h = this.icon.naturalHeight;
         // once constructed, push instance into array
         PowerUp.instances.push(this);
         // remove instance from array
@@ -439,7 +394,7 @@ class PowerUp {
             }
         };
         this.draw = () => {
-            if (!this.gotCollected() && this.y < global_1.viewport.h) {
+            if (!this.gotCollected() && this.y <= global_1.viewport.h) {
                 global_1.ctx.save();
                 this.y += this.vy;
                 global_1.ctx.drawImage(this.icon, this.x, this.y, this.w, this.h);
@@ -463,7 +418,7 @@ PowerUp.render = () => {
 };
 exports.PowerUp = PowerUp;
 
-},{"../global":12,"./PlayerBoard":5,"./PowerUpUI":7}],7:[function(require,module,exports){
+},{"../global":14,"./PlayerBoard":6,"./PowerUpUI":8}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -481,10 +436,10 @@ class PowerUpUI {
         this.timer = lifetime => {
             this.powerUpLifetime = this.initLifetime = lifetime;
             let timer = setInterval(() => {
-                this.powerUpLifetime -= 0.15;
+                this.powerUpLifetime -= 0.016;
                 if (this.powerUpLifetime <= 0)
                     clearInterval(timer);
-            }, 100);
+            }, 1000 / 60);
         };
         this.draw = () => {
             global_1.ctx.save();
@@ -508,7 +463,37 @@ PowerUpUI.render = () => {
 };
 exports.PowerUpUI = PowerUpUI;
 
-},{"../global":12,"./PowerUp":6}],8:[function(require,module,exports){
+},{"../global":14,"./PowerUp":7}],9:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const PowerUp_1 = require("./PowerUp");
+const Orb_1 = require("./Orb");
+const PowerUpUI_1 = require("./PowerUpUI");
+class FireOrb extends PowerUp_1.PowerUp {
+    constructor(x, y) {
+        super(x, y, 'FireOrb', 'powerup_fireorb.png');
+        this.lifetime = 7;
+        this.activate = () => {
+            if (PowerUpUI_1.PowerUpUI.instance.initLifetime <= 0) {
+                Orb_1.Orb.instances.forEach(orb => {
+                    orb.fireOrb = true;
+                });
+                PowerUp_1.PowerUp.active = PowerUp_1.PowerUp.equipped;
+                PowerUp_1.PowerUp.equipped = null;
+                PowerUpUI_1.PowerUpUI.instance.timer(this.lifetime);
+                setTimeout(() => {
+                    Orb_1.Orb.instances.forEach(orb => {
+                        orb.fireOrb = false;
+                    });
+                    PowerUp_1.PowerUp.active = null;
+                }, this.lifetime * 1000);
+            }
+        };
+    }
+}
+exports.FireOrb = FireOrb;
+
+},{"./Orb":4,"./PowerUp":7,"./PowerUpUI":8}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Orb_1 = require("./Orb");
@@ -526,7 +511,7 @@ class MultiOrb extends PowerUp_1.PowerUp {
 }
 exports.MultiOrb = MultiOrb;
 
-},{"./Orb":4,"./PlayerBoard":5,"./PowerUp":6}],9:[function(require,module,exports){
+},{"./Orb":4,"./PlayerBoard":6,"./PowerUp":7}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const PowerUp_1 = require("./PowerUp");
@@ -552,7 +537,7 @@ class XXLBoard extends PowerUp_1.PowerUp {
 }
 exports.XXLBoard = XXLBoard;
 
-},{"./PlayerBoard":5,"./PowerUp":6,"./PowerUpUI":7}],10:[function(require,module,exports){
+},{"./PlayerBoard":6,"./PowerUp":7,"./PowerUpUI":8}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -564,12 +549,17 @@ class StatsUI {
         StatsUI.instance = this;
         this.draw = () => {
             global_1.ctx.save();
-            global_1.ctx.fillStyle = '#aaa';
-            global_1.ctx.font = "16px Impact";
-            global_1.ctx.fillText(`Level ${this.level}`, 10, this.h - 5);
             // container
             global_1.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
             global_1.ctx.fillRect(0, 0, global_1.viewport.w, this.h + 10);
+            // level
+            global_1.ctx.fillStyle = '#aaa';
+            global_1.ctx.font = "16px Arial";
+            global_1.ctx.fillText(`LEVEL ${this.level}`, 10, this.h - 5);
+            // fps
+            global_1.ctx.font = '16px Arial';
+            let fps = `${global_1.game.fps.toFixed(0)} FPS`;
+            global_1.ctx.fillText(fps, global_1.viewport.w - global_1.ctx.measureText(fps).width - 10, this.h - 5);
             global_1.ctx.restore();
         };
     }
@@ -580,7 +570,7 @@ StatsUI.render = () => {
 };
 exports.StatsUI = StatsUI;
 
-},{"../global":12}],11:[function(require,module,exports){
+},{"../global":14}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
@@ -627,7 +617,7 @@ class TextUI {
 }
 exports.TextUI = TextUI;
 
-},{"../global":12}],12:[function(require,module,exports){
+},{"../global":14}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.canvas = document.querySelector('#canvas');
@@ -637,21 +627,22 @@ exports.viewport = {
     h: window.innerHeight < 600 ? 600 : window.innerHeight,
 };
 exports.game = {
-    running: false,
+    running: true,
+    fps: 0,
+    lastFrameRendered: 0,
+    frameCounter: 0,
     misc: {
-        texts: {
-            startGame: ''
-        },
+        texts: {},
         background: null
     }
 };
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("../global");
 const Brick_1 = require("../classes/Brick");
-const BrickArea_1 = require("../classes/BrickArea");
+const Grid_1 = require("../classes/Grid");
 const StatsUI_1 = require("../classes/StatsUI");
 exports.level_1 = () => {
     StatsUI_1.StatsUI.instance.level = 1;
@@ -662,7 +653,7 @@ exports.level_1 = () => {
     const createRow = blocksPerRow => {
         for (var i = 0; i < blocksPerRow; i++) {
             offsetX = (i * 60) + center(blocksPerRow);
-            new Brick_1.Brick(offsetX, BrickArea_1.BrickArea.instance.y + (rowCount * 43));
+            new Brick_1.Brick(offsetX, Grid_1.Grid.instance.y + (rowCount * 43));
         }
         rowCount++;
     };
@@ -677,12 +668,12 @@ exports.level_1 = () => {
     createRow(7);
 };
 
-},{"../classes/Brick":1,"../classes/BrickArea":2,"../classes/StatsUI":10,"../global":12}],14:[function(require,module,exports){
+},{"../classes/Brick":1,"../classes/Grid":2,"../classes/StatsUI":12,"../global":14}],16:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const global_1 = require("./global");
 const TextUI_1 = require("./classes/TextUI");
-const BrickArea_1 = require("./classes/BrickArea");
+const Grid_1 = require("./classes/Grid");
 const StatsUI_1 = require("./classes/StatsUI");
 const PowerUpUI_1 = require("./classes/PowerUpUI");
 const PlayerBoard_1 = require("./classes/PlayerBoard");
@@ -690,6 +681,7 @@ const Orb_1 = require("./classes/Orb");
 const level_1_1 = require("./level/level-1");
 const PowerUp_1 = require("./classes/PowerUp");
 const Brick_1 = require("./classes/Brick");
+const Orb_DevOrb_1 = require("./classes/Orb_DevOrb");
 // INIT GAME ============================================================
 document.addEventListener('DOMContentLoaded', () => init());
 const init = () => {
@@ -733,20 +725,24 @@ const init = () => {
     global_1.game.misc.texts.moveRight = new TextUI_1.TextUI('D >>', global_1.viewport.w / 2 + 125, global_1.viewport.h - 35, '#fff', '40px Impact');
     global_1.game.misc.texts.usePowerUp = new TextUI_1.TextUI('E = PowerUp', 'center', global_1.viewport.h - 75, '#fff', '30px Impact');
     // game setup
-    new BrickArea_1.BrickArea(0, 45, global_1.viewport.w, global_1.viewport.h - 45);
+    new Grid_1.Grid(0, 45, global_1.viewport.w, global_1.viewport.h - 45);
     new StatsUI_1.StatsUI();
     new PowerUpUI_1.PowerUpUI();
     new PlayerBoard_1.PlayerBoard();
     new Orb_1.Orb(PlayerBoard_1.PlayerBoard.instance.x, PlayerBoard_1.PlayerBoard.instance.y - 10);
-    // new DevOrb();
+    new Orb_DevOrb_1.DevOrb();
+    // new FireOrb(PlayerBoard.instance.x, PlayerBoard.instance.y);
+    // new MultiOrb(PlayerBoard.instance.x, PlayerBoard.instance.y-200);
     level_1_1.level_1();
+    // console.log(GridSegment.instances[GridSegment.instances.length - 1].id);
     gameLoop();
 };
 const gameLoop = () => {
+    // clear canvas
+    global_1.ctx.clearRect(0, 0, global_1.viewport.w, global_1.viewport.h);
     // draw background image
     global_1.ctx.drawImage(global_1.game.misc.background, 0, 0, global_1.viewport.w, global_1.viewport.h);
-    // clear canvas
-    global_1.ctx.fillStyle = 'rgba(22, 22, 24, 0.75)';
+    global_1.ctx.fillStyle = 'rgba(22, 22, 24, 0.7)';
     global_1.ctx.fillRect(0, 0, global_1.viewport.w, global_1.viewport.h);
     // display 'game start' text while game is not running
     if (!global_1.game.running)
@@ -758,7 +754,7 @@ const gameLoop = () => {
     if (!global_1.game.running)
         global_1.game.misc.texts.usePowerUp.draw();
     // GAME COMPONENTS
-    // BrickArea.render();
+    Grid_1.Grid.render();
     StatsUI_1.StatsUI.render();
     PowerUpUI_1.PowerUpUI.render();
     Brick_1.Brick.render();
@@ -771,8 +767,129 @@ const gameLoop = () => {
     if (global_1.game.over)
         global_1.game.misc.texts.gameover.pulse();
     requestAnimationFrame(() => {
+        // FPS display
+        global_1.game.frameCounter++;
+        let fps = 1 / ((performance.now() - global_1.game.lastFrameRendered) / 1000);
+        global_1.game.lastFrameRendered = performance.now();
+        if (global_1.game.frameCounter > 30) {
+            global_1.game.fps = fps;
+            global_1.game.frameCounter = 0;
+        }
         gameLoop();
     });
 };
 
-},{"./classes/Brick":1,"./classes/BrickArea":2,"./classes/Orb":4,"./classes/PlayerBoard":5,"./classes/PowerUp":6,"./classes/PowerUpUI":7,"./classes/StatsUI":10,"./classes/TextUI":11,"./global":12,"./level/level-1":13}]},{},[14]);
+},{"./classes/Brick":1,"./classes/Grid":2,"./classes/Orb":4,"./classes/Orb_DevOrb":5,"./classes/PlayerBoard":6,"./classes/PowerUp":7,"./classes/PowerUpUI":8,"./classes/StatsUI":12,"./classes/TextUI":13,"./global":14,"./level/level-1":15}],17:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+// O R B  H I T S  P A D D L E ==================================================
+exports.OrbPaddle = (orb, paddle) => {
+    let coll = {
+        top: orb.y + orb.radius + 1 >= paddle.y &&
+            orb.y - orb.radius - 1 <= paddle.y &&
+            orb.x - orb.radius - 1 <= paddle.x - paddle.w / 2 + paddle.w &&
+            orb.x + orb.radius + 1 >= paddle.x - paddle.w / 2,
+        left: orb.x + orb.radius + 1 >= paddle.x - paddle.w / 2 &&
+            orb.x - orb.radius - 1 <= paddle.x - paddle.w / 2 &&
+            orb.y - orb.radius - 1 <= paddle.y + paddle.h &&
+            orb.y + orb.radius + 1 >= paddle.y,
+        right: orb.x + orb.radius + 1 >= paddle.x - paddle.w / 2 + paddle.w &&
+            orb.x - orb.radius - 1 <= paddle.x - paddle.w / 2 + paddle.w &&
+            orb.y - orb.radius - 1 <= paddle.y + paddle.h &&
+            orb.y + orb.radius + 1 >= paddle.y,
+    };
+    switch (true) {
+        case coll.top && coll.left:
+            // orb.vx *= -1;
+            orb.vy *= -1;
+            break;
+        case coll.top && coll.right:
+            // orb.vx *= -1;
+            orb.vy *= -1;
+            break;
+        case coll.top:
+            orb.vy *= -1;
+            break;
+        case coll.left:
+            orb.vx *= -1;
+            break;
+        case coll.right:
+            orb.vx *= -1;
+            break;
+        default:
+            return false;
+    }
+    return true;
+};
+// O R B  H I T S  B R I C K ==================================================
+exports.OrbBrick = (orb, brick) => {
+    let coll = {
+        top: orb.y + orb.radius + 1 >= brick.y &&
+            orb.y - orb.radius - 1 <= brick.y &&
+            orb.x - orb.radius - 1 <= brick.x + brick.w &&
+            orb.x + orb.radius + 1 >= brick.x,
+        left: orb.x + orb.radius + 1 >= brick.x &&
+            orb.x - orb.radius - 1 <= brick.x &&
+            orb.y - orb.radius - 1 <= brick.y + brick.h &&
+            orb.y + orb.radius + 1 >= brick.y,
+        right: orb.x + orb.radius + 1 >= brick.x + brick.w &&
+            orb.x - orb.radius - 1 <= brick.x + brick.w &&
+            orb.y - orb.radius - 1 <= brick.y + brick.h &&
+            orb.y + orb.radius + 1 >= brick.y,
+        bottom: orb.y + orb.radius + 1 >= brick.y + brick.h &&
+            orb.y - orb.radius - 1 <= brick.y + brick.h &&
+            orb.x - orb.radius - 1 <= brick.x + brick.w &&
+            orb.x + orb.radius + 1 >= brick.x
+    };
+    // if fireorb, report collision, but skip orb reaction
+    if (orb.fireOrb)
+        return (coll.top || coll.left || coll.right || coll.bottom);
+    switch (true) {
+        case coll.top && coll.left:
+            orb.vx *= -1;
+            break;
+        case coll.top && coll.right:
+            orb.vx *= -1;
+            break;
+        case coll.bottom && coll.left:
+            orb.vx *= -1;
+            break;
+        case coll.bottom && coll.right:
+            orb.vx *= -1;
+            break;
+        case coll.top:
+            orb.vy *= -1;
+            break;
+        case coll.bottom:
+            orb.vy *= -1;
+            break;
+        case coll.left:
+            orb.vx *= -1;
+            break;
+        case coll.right:
+            orb.vx *= -1;
+            break;
+        default:
+            return false;
+    }
+    return true;
+};
+// O R B  E N T E R S ==================================================
+exports.OrbEnters = (orb, segment) => {
+    return orb.y + orb.radius >= segment.y &&
+        orb.y - orb.radius <= segment.y + segment.h &&
+        orb.x + orb.radius >= segment.x &&
+        orb.x - orb.radius <= segment.x + segment.w;
+};
+// O R B  H I T  W A L L ==================================================
+exports.OrbWall = (orb) => {
+};
+
+},{}],18:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.randNum = (min, max) => {
+    return Math.random() * (max - min) + min;
+};
+
+},{}]},{},[16]);
