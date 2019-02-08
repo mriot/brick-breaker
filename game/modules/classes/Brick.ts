@@ -3,6 +3,7 @@ import { MultiOrb } from "./PowerUp_MultiOrb";
 import { XXLBoard } from "./PowerUp_XXLBoard";
 import { GridSegment } from "./GridSegment";
 import { FX } from "./FX";
+import { FireOrb } from "./PowerUp_FireOrb";
 
 export class Brick {
     x: number;
@@ -49,10 +50,20 @@ export class Brick {
 		}
 
 		this.dropPowerUp = () => {
-			if (Math.round(Math.random() * 5) === 1 || false) {
-				let num = Math.round(Math.random() * 2);
-				if (num === 0) new XXLBoard(this.x, this.y);
-				if (num === 1) new MultiOrb(this.x, this.y);
+			if (Math.round(Math.random() * 6) === 1 || false) {
+				switch (Math.floor(Math.random() * 3)) {
+					case 0:
+						new MultiOrb(this.x, this.y)
+						break;
+					case 1:
+						new XXLBoard(this.x, this.y)
+						break;
+					case 2:
+						new FireOrb(this.x, this.y)
+						break;
+					default:
+						console.warn('Brick.ts : dropPowerUp() : Out of range!');
+				}
 			}
 		}
 
