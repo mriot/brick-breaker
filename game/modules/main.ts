@@ -1,6 +1,6 @@
 import { canvas, ctx, viewport, game } from './global';
 import { TextUI } from './classes/TextUI';
-import { BrickArea } from './classes/BrickArea';
+import { Grid } from './classes/Grid';
 import { StatsUI } from './classes/StatsUI';
 import { PowerUpUI } from './classes/PowerUpUI';
 import { PlayerBoard } from './classes/PlayerBoard';
@@ -10,6 +10,10 @@ import { PowerUp } from './classes/PowerUp';
 import { Brick } from './classes/Brick';
 import { DevOrb } from './classes/Orb_DevOrb';
 import { FX } from './classes/FX';
+import { XXLBoard } from './classes/PowerUp_XXLBoard';
+import { FireOrb } from './classes/PowerUp_FireOrb';
+import { GridSegment } from './classes/GridSegment';
+import { MultiOrb } from './classes/PowerUp_MultiOrb';
 
 // INIT GAME ============================================================
 document.addEventListener('DOMContentLoaded', () => init())
@@ -58,14 +62,19 @@ const init = () => {
 	game.misc.texts.usePowerUp = new TextUI('E = PowerUp', 'center', viewport.h - 75, '#fff', '30px Impact');
 	
 	// game setup
-	new BrickArea(0, 45, viewport.w, viewport.h - 45);
+	new Grid(0, 45, viewport.w, viewport.h - 45);
 	new StatsUI();
 	new PowerUpUI();
 	new PlayerBoard();
 	new Orb(PlayerBoard.instance.x, PlayerBoard.instance.y - 10);
-	// new DevOrb();
+	new DevOrb();
+	// new FireOrb(PlayerBoard.instance.x, PlayerBoard.instance.y);
+	// new MultiOrb(PlayerBoard.instance.x, PlayerBoard.instance.y-200);
 	
 	level_1();
+
+	// console.log(GridSegment.instances[GridSegment.instances.length - 1].id);
+	
 
 	gameLoop();
 }
@@ -86,7 +95,7 @@ const gameLoop = () => {
 	if (!game.running) game.misc.texts.usePowerUp.draw();
 	
 	// GAME COMPONENTS
-	// BrickArea.render();
+	Grid.render();
 	StatsUI.render();
 	PowerUpUI.render();
 	Brick.render();
@@ -99,6 +108,7 @@ const gameLoop = () => {
 	if (game.over) game.misc.texts.gameover.pulse();
 
 	requestAnimationFrame(() => {
+		// FPS display
 		game.frameCounter++;
 		let fps = 1 / ((performance.now() - game.lastFrameRendered) / 1000);
 		game.lastFrameRendered = performance.now();

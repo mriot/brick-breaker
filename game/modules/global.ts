@@ -6,14 +6,12 @@ export let viewport: any = {
 };
 
 export let game: any = {
-	running: false,
+	running: true,
 	fps: 0,
 	lastFrameRendered: 0,
 	frameCounter: 0,
 	misc: {
-		texts: {
-			startGame: ''
-		},
+		texts: {},
 		background: null
 	}
 };

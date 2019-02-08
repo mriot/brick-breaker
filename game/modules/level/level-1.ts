@@ -1,6 +1,6 @@
 import { viewport } from "../global";
 import { Brick } from "../classes/Brick";
-import { BrickArea } from "../classes/BrickArea";
+import { Grid } from "../classes/Grid";
 import { StatsUI } from "../classes/StatsUI";
 
 export const level_1 = () => {
@@ -14,7 +14,7 @@ export const level_1 = () => {
 	const createRow = blocksPerRow => {
 		for (var i = 0; i < blocksPerRow; i++) {
 			offsetX = (i * 60) + center(blocksPerRow);
-			new Brick(offsetX, BrickArea.instance.y + (rowCount * 43));
+			new Brick(offsetX, Grid.instance.y + (rowCount * 43));
 		}
 		rowCount++;
 	}
