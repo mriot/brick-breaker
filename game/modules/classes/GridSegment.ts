@@ -1,12 +1,11 @@
 import { ctx } from "../global";
-import { BrickArea } from "./BrickArea";
+import { Grid } from "./Grid";
 
 export class GridSegment {
     x: number;
     y: number;
     w: number;
     h: number;
-    color: string;
     id: number;
     contains: any[];
     draw: () => void;
@@ -18,24 +17,23 @@ export class GridSegment {
 		}
 	}
 
-	constructor(x: number, y: number, size: number, id: number) {
+	constructor(x: number, y: number, w: number, h: number, id: number) {
 		this.x = x;
 		this.y = y;
-		this.w = BrickArea.instance.w / size;
-		this.h = BrickArea.instance.h / size;
-		this.color = 'rgba(0, 255, 255, 0.5)';
+		this.w = w;
+		this.h = h;
 		this.id = id;
-		this.contains = [];
+		this.contains = [];// bricks
 
 		GridSegment.instances.push(this);
 
 		this.draw = () => {
 			ctx.save();
-			ctx.strokeStyle = this.color;
+			ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
 			ctx.strokeRect(this.x, this.y, this.w, this.h);
 			ctx.font = '20px Arial';
 			ctx.fillStyle = '#000';
-			ctx.fillText(this.id, this.x + this.w / 2.2, this.y + this.h / 1.8);
+			ctx.fillText(this.id, this.x + this.w / 2 - 10, this.y + this.h / 1.8);
 			ctx.restore();
 		}
 	}
