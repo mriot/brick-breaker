@@ -3,9 +3,8 @@ import { PowerUp } from "./PowerUp";
 
 export class StickyBoard extends PowerUp {
     lifetime: number;
-    activate: () => void;
 
-	constructor(x, y) {
+	constructor(x: number, y: number) {
 		super(x, y, 'Sticky Board', '');
 		this.lifetime = 30;
 

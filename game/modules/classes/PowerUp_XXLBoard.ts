@@ -4,7 +4,6 @@ import { PlayerBoard } from "./PlayerBoard";
 
 export class XXLBoard extends PowerUp {
     lifetime: number;
-    activate: () => void;
 
 	constructor(x: number, y: number) {
 		super(x, y, 'XXL Board', 'powerup_xxlboard.png');

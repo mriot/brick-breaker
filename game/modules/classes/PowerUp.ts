@@ -8,13 +8,11 @@ export class PowerUp {
     vy: number;
     w: number;
     h: number;
-    hidden: boolean;
     icon: HTMLImageElement;
-	color: string;
 	activate: () => void;
     gotCollected: () => boolean;
-	draw: () => void;
     kill: () => void;
+	draw: () => void;
 	
 	public static equipped: PowerUp = null;
 	public static active: PowerUp = null;
@@ -30,10 +28,10 @@ export class PowerUp {
 		this.x = x;
 		this.y = y;
 		this.vy = 5;
-		this.w = 50;
-		this.h = 25;
-		this.icon = new Image(100, 100);
+		this.icon = new Image(0, 0);
 		this.icon.src = 'img/' + icon;
+		this.w = this.icon.naturalWidth;
+		this.h = this.icon.naturalHeight;
 		// once constructed, push instance into array
 		PowerUp.instances.push(this);
 
@@ -57,7 +55,7 @@ export class PowerUp {
 		}
 
 		this.draw = () => {		
-			if (!this.gotCollected() && this.y < viewport.h) {
+			if (!this.gotCollected() && this.y <= viewport.h) {
 				ctx.save();
 				this.y += this.vy;
 				ctx.drawImage(this.icon, this.x, this.y, this.w, this.h);

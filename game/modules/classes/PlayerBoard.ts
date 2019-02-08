@@ -13,6 +13,7 @@ export class PlayerBoard {
     draw: () => void;
     moveLeft: () => void;
     moveRight: () => void;
+	springAnim: () => void;
 
 	public static controls: any = {left: false, right: false}
 	public static instance: PlayerBoard = null;
@@ -34,12 +35,12 @@ export class PlayerBoard {
 
 		PlayerBoard.instance = this;
 
-		this.moveLeft = () => {
-			if (this.x - this.w / 2 > 0) this.x -= this.vx
-		}
+		this.moveLeft = () => { if (this.x - this.w / 2 > 0) this.x -= this.vx }
+		this.moveRight = () => { if (this.x + this.w / 2 < viewport.w) this.x += this.vx }
 
-		this.moveRight = () => {
-			if (this.x + this.w / 2 < viewport.w) this.x += this.vx
+		this.springAnim = () => {
+			this.y += 3;
+			setTimeout(() => this.y -= 3, 70);
 		}
 
 		this.draw = () => {
@@ -52,7 +53,6 @@ export class PlayerBoard {
 			ctx.shadowColor = "rgba(255, 255, 255, 0.1)";
 			ctx.drawImage(this.texture, this.x - this.w / 2, this.y, this.w, this.h);
 			ctx.restore();
-
 		}
 	}
 }

@@ -1,8 +1,13 @@
 import { game, viewport, ctx } from "../global";
 import { PlayerBoard } from "./PlayerBoard";
-import { BrickArea } from "./BrickArea";
+import { Grid } from "./Grid";
 import { GridSegment } from "./GridSegment";
-import { TextUI } from "./TextUI";
+import { randNum } from "../utilities/functions";
+import { 
+	OrbPaddle as orbHitsBoard,
+	OrbBrick as orbHitsBrick,
+	OrbEnters as orbEntersSegment
+} from "../utilities/collision";
 
 export class Orb {
     x: number;
@@ -12,8 +17,9 @@ export class Orb {
     radius: number;
     fillColor: string;
     trailLength: number;
-    trail: any[];
-    hits: (obj: any) => boolean;
+	trail: any[];
+	fireOrb: boolean;
+    enters: (obj: any) => boolean;
     isColliding: () => void;
     drawTrail: () => void;
 	draw: () => void;
@@ -28,25 +34,19 @@ export class Orb {
 	}
 
 	constructor(x: number, y: number) {
+		Orb.instances.push(this);
+		
 		this.x = x;
 		this.y = y;
-		this.vx = Math.floor(Math.random() * 5 + 3);
-		this.vy = 5;
-		// this.vx = 1.5;
-		// this.vy = 2;
+		this.vx = randNum(-10, 10);
+		this.vy = 6;
 		this.radius = 6;
 		this.fillColor = 'rgb(0, 255, 255)';
 		this.trailLength = 7;
 		this.trail = [];
-		// once constructed, push instance into array
-		Orb.instances.push(this);
+		this.fireOrb = Orb.instances[0].fireOrb;
 
-		document.addEventListener('keydown', e => {
-			if (e.keyCode === 187) this.vx += 1
-			if (e.keyCode === 189) this.vx -= 1
-		})
-
-		// remove instance from array
+		// remove instance from instances array
 		this.kill = () => {
 			for (let i = 0; i < Orb.instances.length; i++) {
 				if (Orb.instances[i] === this) {
@@ -54,128 +54,43 @@ export class Orb {
 				}
 			}
 
+			// check if that was the last orb -> game over ;-)
 			if (Orb.instances.length === 0) {
-				game.over = true;
-				game.misc.texts.gameover = new TextUI('GAME OVER', 'center', viewport.h / 2 + 50, '#fff', '100px Impact', true);
+				// GameOver.show();
+				// game.over = true;
+				// game.misc.texts.gameover = new TextUI('GAME OVER', 'center', viewport.h / 2 + 50, '#fff', '100px Impact', true);
 			}
-		}
-
-		this.hits = obj => {
-			return this.y + this.radius >= obj.y && this.y - this.radius <= obj.y + obj.h && this.x + this.radius >= obj.x && this.x - this.radius <= obj.x + obj.w;
-		}
-
-		let hitTop = brick => {
-			return (
-				this.y + this.radius + 1 >= brick.y &&
-				this.y - this.radius - 1 <= brick.y &&
-				this.x - this.radius - 1 <= brick.x + brick.w &&
-				this.x + this.radius + 1 >= brick.x
-			)
-		}
-		let hitLeft = brick => {
-			return (
-				this.x + this.radius + 1 >= brick.x &&
-				this.x - this.radius - 1 <= brick.x &&
-				this.y - this.radius - 1 <= brick.y + brick.h &&
-				this.y + this.radius + 1 >= brick.y
-			)
-		}
-		let hitRight = brick => {
-			return (
-				this.x + this.radius + 1 >= brick.x + brick.w &&
-				this.x - this.radius - 1 <= brick.x + brick.w &&
-				this.y - this.radius - 1 <= brick.y + brick.h &&
-				this.y + this.radius + 1 >= brick.y
-			)
-		}
-		let hitBottom = brick => {
-			return (
-				this.y + this.radius + 1 >= brick.y + brick.h &&
-				this.y - this.radius - 1 <= brick.y + brick.h &&
-				this.x - this.radius - 1 <= brick.x + brick.w &&
-				this.x + this.radius + 1 >= brick.x
-			)
-		}
-
-		this.collision = brick => {
-			let coll = {
-				top: hitTop(brick),
-				left: hitLeft(brick),
-				right: hitRight(brick),
-				bottom: hitBottom(brick)
-			};
-			
-			switch (true) {
-				case coll.top && coll.left:
-					// console.log('TOP LEFT')
-					this.vx *= -1;
-					break;
-				case coll.top && coll.right:
-					// console.log('TOP RIGHT')
-					this.vx *= -1;
-					break;
-				case coll.bottom && coll.left:
-					// console.log('BOTTOM LEFT')
-					this.vx *= -1;
-					break;
-				case coll.bottom && coll.right:
-					// console.log('BOTTOM RIGHT')
-					this.vx *= -1;
-					break;
-				case coll.top:
-					// console.log('TOP')
-					this.vy *= -1;
-					break;
-				case coll.bottom:
-					// console.log('BOTTOM')
-					this.vy *= -1;
-					break;
-				case coll.left:
-					// console.log('LEFT')
-					this.vx *= -1;
-					break;
-				case coll.right:
-					// console.log('RIGHT')
-					this.vx *= -1;
-					break;
-				default:
-					return false;
-			}
-			return true;
 		}
 
 		this.isColliding = () => {
 			let segments = GridSegment.instances;
 			for (let i = 0; i < segments.length; i++) {
-				if (this.hits(segments[i])) {
-					// game.misc.texts.calcs = new TextUI(segments[i].contains.length + "", this.x, this.y - this.radius * 2, '#fff', '20px Arial');
-					for (let j = 0; j < segments[i].contains.length; j++) {
-						let brick = segments[i].contains[j];
-						if (this.collision(brick)) {
-							brick.poof();
+				// segment check
+				if (orbEntersSegment(this, segments[i])) {
+					if (segments[i].id === segments.length - 1) {
+						// if bottom segment -> check for board collision
+						if (orbHitsBoard(this, PlayerBoard.instance)) {
+							// player board 'push down' animation
+							PlayerBoard.instance.springAnim();
+						}
+					} else {
+						// brick collision
+						// game.misc.texts.calcs = new TextUI(segments[i].contains.length + "", this.x, this.y - this.radius * 2, '#fff', '20px Arial');
+						for (let j = 0; j < segments[i].contains.length; j++) {
+							let brick = segments[i].contains[j];
+							if (orbHitsBrick(this, brick)) {
+								brick.poof();
+							}
 						}
 					}
 				}
 			}
 			
-
 			// wall collision
-			if (this.y - this.radius < BrickArea.instance.y) {this.vy *= -1; this.y = BrickArea.instance.y + this.radius}// top wall
+			if (this.y - this.radius < Grid.instance.y) {this.vy *= -1; this.y = Grid.instance.y + this.radius}// top wall
 			if (this.x - this.radius < 0) {this.vx *= -1; this.x = this.radius}// left wall
 			if (this.x + this.radius > viewport.w) {this.vx *= -1; this.x = viewport.w - this.radius}// right wall
 			if (this.y + this.radius > viewport.h) {this.kill()}// bottom 'wall'
-
-			// board collision
-			let distX = (this.x + this.radius) - (PlayerBoard.instance.x - PlayerBoard.instance.w / 2);
-			let distY = (this.y + this.radius) - PlayerBoard.instance.y;
-			if ((distX >= 0 && distX <= PlayerBoard.instance.w + this.radius * 2) && (distY >= 0 && distY <= PlayerBoard.instance.h + this.radius * 2)) {
-				if (PlayerBoard.instance.sticky) {
-					this.vy = 0;
-					this.vx = 0;
-				} else {
-					this.vy *= -1;
-				}
-			}
 		}
 
 		this.drawTrail = () => {
@@ -209,6 +124,7 @@ export class Orb {
 				this.y = PlayerBoard.instance.y - 10;
 			}
 			ctx.fillStyle = this.fillColor;
+			if (this.fireOrb) ctx.fillStyle = 'red';
 			ctx.shadowBlur = 10;
 			ctx.shadowColor = "rgba(0, 255, 255, 0.5)";
 			ctx.beginPath();
