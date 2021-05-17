@@ -14,6 +14,7 @@ import { XXLBoard } from './classes/PowerUp_XXLBoard';
 import { FireOrb } from './classes/PowerUp_FireOrb';
 import { GridSegment } from './classes/GridSegment';
 import { MultiOrb } from './classes/PowerUp_MultiOrb';
+import { xorNum } from './utilities/functions';
 
 // INIT GAME ============================================================
 document.addEventListener('DOMContentLoaded', () => init())
@@ -74,7 +75,6 @@ const init = () => {
 	level_1();
 
 	// console.log(GridSegment.instances[GridSegment.instances.length - 1].id);
-	
 
 	gameLoop();
 }

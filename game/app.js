@@ -181,8 +181,10 @@ class Orb {
         Orb.instances.push(this);
         this.x = x;
         this.y = y;
-        this.vx = functions_1.randNum(-10, 10);
-        this.vy = 6;
+        // this.vx = xorNum([-6, 6]);
+        // this.vx = -5;
+        this.vx = functions_1.xorNum([-9, -5, -3, -2, 2, 3, 5, 9]);
+        this.vy = 12 - Math.abs(this.vx);
         this.radius = 6;
         this.fillColor = 'rgb(0, 255, 255)';
         this.trailLength = 7;
@@ -890,6 +892,12 @@ exports.OrbWall = (orb) => {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.randNum = (min, max) => {
     return Math.random() * (max - min) + min;
+};
+exports.randInt = (min, max) => {
+    return Math.floor(Math.random() * (Math.floor(max) - Math.ceil(min) + 1)) + Math.ceil(min);
+};
+exports.xorNum = (numArr) => {
+    return numArr[Math.floor(Math.random() * numArr.length)];
 };
 
 },{}]},{},[16]);

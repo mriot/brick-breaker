@@ -2,7 +2,7 @@ import { game, viewport, ctx } from "../global";
 import { PlayerBoard } from "./PlayerBoard";
 import { Grid } from "./Grid";
 import { GridSegment } from "./GridSegment";
-import { randNum } from "../utilities/functions";
+import { randNum, xorNum, randInt } from "../utilities/functions";
 import { 
 	OrbPaddle as orbHitsBoard,
 	OrbBrick as orbHitsBrick,
@@ -38,13 +38,16 @@ export class Orb {
 		
 		this.x = x;
 		this.y = y;
-		this.vx = randNum(-10, 10);
-		this.vy = 6;
+		// this.vx = xorNum([-6, 6]);
+		// this.vx = -5;
+		this.vx = xorNum([-9, -5, -3, -2, 2, 3, 5, 9]);
+		this.vy = 12 - Math.abs(this.vx);
 		this.radius = 6;
 		this.fillColor = 'rgb(0, 255, 255)';
 		this.trailLength = 7;
 		this.trail = [];
 		this.fireOrb = Orb.instances[0].fireOrb;
+		
 
 		// remove instance from instances array
 		this.kill = () => {
