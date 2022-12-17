@@ -1,17 +1,25 @@
-var gulp = require('gulp');
-var concat = require('gulp-concat');
+var gulp = require("gulp");
+var browserify = require("browserify");
+var source = require('vinyl-source-stream');
+var watchify = require("watchify");
+var tsify = require("tsify");
+var gutil = require("gulp-util");
 
-gulp.task('scripts', function() {
-  return gulp.src('./game/modules/**/*.js')
-    .pipe(concat('game.js'))
-    .pipe(gulp.dest('./game'));
-});
+var watchedBrowserify = watchify(browserify({
+    basedir: '.',
+    debug: false,
+    entries: ['game/modules/main.ts'],
+    cache: {},
+    packageCache: {}
+}).plugin(tsify));
 
-gulp.task('watch', function() {
-	gulp.watch('./game/modules/**/*.js').on('change', function(evt) {
-		console.log('file changed: ' + evt);
-		gulp.task('scripts')()
-    });
-});
+function bundle() {
+    return watchedBrowserify
+        .bundle()
+        .pipe(source('app.js'))
+        .pipe(gulp.dest("game"));
+}
 
-gulp.task('default', gulp.series('scripts', 'watch'));
+gulp.task("default", bundle);
+watchedBrowserify.on("update", bundle);
+watchedBrowserify.on("log", gutil.log);

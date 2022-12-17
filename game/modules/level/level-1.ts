@@ -1,0 +1,31 @@
+import { viewport } from "../global";
+import { Brick } from "../classes/Brick";
+import { Grid } from "../classes/Grid";
+import { StatsUI } from "../classes/StatsUI";
+
+export const level_1 = () => {
+	StatsUI.instance.level = 1;
+
+	let rowCount = 0, offsetX = 0;
+	let center = blocksPerRow => {
+		return ((blocksPerRow * 60) - viewport.w) / 2 * -1;
+	}
+
+	const createRow = blocksPerRow => {
+		for (var i = 0; i < blocksPerRow; i++) {
+			offsetX = (i * 60) + center(blocksPerRow);
+			new Brick(offsetX, Grid.instance.y + (rowCount * 43));
+		}
+		rowCount++;
+	}
+
+	createRow(17);
+	createRow(10);
+	createRow(15);
+	createRow(2);
+	createRow(11);
+	createRow(4);
+	createRow(1);
+	createRow(3);
+	createRow(7);
+}
